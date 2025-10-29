@@ -1,12 +1,12 @@
-# 📡 Extração de Dados da API do GLPI
+# [EMOJI] Extração de Dados da API do GLPI
 
 Este documento descreve os scripts desenvolvidos para extrair dados de tickets diretamente da API do GLPI, garantindo dados atualizados e completos.
 
-## 📋 Visão Geral
+## [LISTA] Visão Geral
 
 Os scripts extraem dados de tickets do sistema GLPI através da API REST, aplicando as mesmas formatações e limpezas utilizadas nos dados do banco local, garantindo consistência e qualidade dos dados.
 
-## 🔧 Scripts Disponíveis
+## [CONFIG] Scripts Disponíveis
 
 ### 1. `extrair_dados_api_glpi.py` (Versão Original)
 Script inicial para extração de dados da API do GLPI.
@@ -21,21 +21,21 @@ Script inicial para extração de dados da API do GLPI.
 Versão otimizada com cache para melhor performance.
 
 **Características:**
-- ⚡ **Performance otimizada** (3-4 segundos vs vários minutos)
-- 🗄️ **Sistema de cache** para dados relacionados
-- 📊 **Processamento em lote** de relacionamentos
+- [EMOJI] **Performance otimizada** (3-4 segundos vs vários minutos)
+- [CACHE] **Sistema de cache** para dados relacionados
+- [METRICAS] **Processamento em lote** de relacionamentos
 - 🧹 **Mesma qualidade de limpeza** de dados
 
-### 3. `extrair_dados_api_glpi_com_filtro_data.py` (Mais Recente) ⭐
+### 3. `extrair_dados_api_glpi_com_filtro_data.py` (Mais Recente) [EMOJI]
 Versão com filtro de data para extrair tickets de períodos específicos.
 
 **Características:**
-- 📅 **Filtro por período** (data de abertura ou última atualização)
-- ⚡ **Performance otimizada** com sistema de cache
-- 🎯 **Extração direcionada** para análises específicas
-- 📊 **Ideal para relatórios mensais/trimestrais**
+- [DATA] **Filtro por período** (data de abertura ou última atualização)
+- [EMOJI] **Performance otimizada** com sistema de cache
+- [FOCO] **Extração direcionada** para análises específicas
+- [METRICAS] **Ideal para relatórios mensais/trimestrais**
 
-## 🚀 Como Usar
+## [INICIO] Como Usar
 
 ### Pré-requisitos
 ```bash
@@ -47,7 +47,7 @@ pip install requests
 python extrair_dados_api_glpi_otimizado.py
 ```
 
-### Execução com Filtro de Data ⭐
+### Execução com Filtro de Data [EMOJI]
 ```bash
 # Para os últimos 6 meses (salva em dados/tickets_6_meses/)
 python extrair_dados_api_glpi_com_filtro_data.py --periodo ultimos_6_meses
@@ -71,7 +71,7 @@ python extrair_dados_api_glpi_com_filtro_data.py --periodo ano_passado
 python extrair_dados_api_glpi_com_filtro_data.py --data-inicial "01/09/2025" --data-final "30/09/2025"
 ```
 
-> **💡 Organização Automática:** O script automaticamente cria e organiza os arquivos nas pastas corretas baseado no tipo de execução, facilitando a gestão e localização dos dados extraídos.
+> **[DICA] Organização Automática:** O script automaticamente cria e organiza os arquivos nas pastas corretas baseado no tipo de execução, facilitando a gestão e localização dos dados extraídos.
 
 ### Configuração
 Os scripts já estão configurados com as credenciais da API:
@@ -88,7 +88,7 @@ python extrair_dados_api_glpi_otimizado.py
 python extrair_dados_api_glpi.py
 ```
 
-## 📊 Dados Extraídos
+## [METRICAS] Dados Extraídos
 
 ### Colunas do CSV Gerado
 | Coluna | Descrição | Exemplo |
@@ -114,15 +114,15 @@ python extrair_dados_api_glpi.py
 - **Espaços em branco:** Múltiplos espaços reduzidos a um
 - **Quebras de linha:** Convertidas em espaços
 
-#### 📅 Formatação de Datas
+#### [DATA] Formatação de Datas
 - **Formato de entrada:** `YYYY-MM-DD HH:MM:SS`
 - **Formato de saída:** `DD/MM/YYYY HH:MM:SS`
 
-#### 📝 Limitação de Texto
+#### [TEXTO] Limitação de Texto
 - **Descrições:** Limitadas a 500 caracteres (+ "..." se truncado)
 - **Campos de texto:** Limpeza de caracteres de controle
 
-#### 🔄 Tradução de Status
+#### [PROCESSO] Tradução de Status
 - `1` → "Novo"
 - `2` → "Em andamento (atribuído)"
 - `3` → "Em andamento (planejado)"
@@ -130,7 +130,7 @@ python extrair_dados_api_glpi.py
 - `5` → "Solucionado"
 - `6` → "Fechado"
 
-## 📈 Estatísticas das Últimas Extrações
+## [GRAFICO] Estatísticas das Últimas Extrações
 
 ### Extração Completa (Todos os Tickets)
 **Arquivo gerado**: `tickets_api_glpi_otimizado_20251021_205703.csv`
@@ -144,7 +144,7 @@ python extrair_dados_api_glpi.py
 
 #### Últimos 6 Meses
 **Arquivo gerado**: `tickets_api_glpi_ultimos_6_meses_20251022_144233.csv`
-**Localização**: `dados/tickets_6_meses/` ✨
+**Localização**: `dados/tickets_6_meses/` [EMOJI]
 - **Total de tickets**: 2,850
 - **Período**: 25/04/2025 a 22/10/2025
 - **Tamanho do arquivo**: ~1.5 MB
@@ -153,7 +153,7 @@ python extrair_dados_api_glpi.py
 
 #### Último Mês
 **Arquivo gerado**: `tickets_api_glpi_ultimo_mes_20251022_144314.csv`
-**Localização**: `dados/tickets_ultimo_mes/` ✨
+**Localização**: `dados/tickets_ultimo_mes/` [EMOJI]
 - **Total de tickets**: 372
 - **Período**: 22/09/2025 a 22/10/2025
 - **Tamanho do arquivo**: ~200 KB
@@ -162,7 +162,7 @@ python extrair_dados_api_glpi.py
 
 #### Data Personalizada (Setembro 2025)
 **Arquivo gerado**: `tickets_api_glpi_personalizado_20251022_144329.csv`
-**Localização**: `dados/tickets_data_personalizada/` ✨
+**Localização**: `dados/tickets_data_personalizada/` [EMOJI]
 - **Total de tickets**: 379
 - **Período**: 01/09/2025 a 30/09/2025
 - **Tamanho do arquivo**: ~220 KB
@@ -176,7 +176,7 @@ python extrair_dados_api_glpi.py
 | **Banco Local** | 10.474 | Dados de teste (desatualizados) |
 | **Diferença** | +221 | Novos tickets na API |
 
-## 🔧 Funcionalidades Técnicas
+## [CONFIG] Funcionalidades Técnicas
 
 ### Sistema de Cache (Versão Otimizada)
 ```python
@@ -199,30 +199,30 @@ cache_grupos = {}        # Todos os grupos
 - **Dados:** Tratamento de campos nulos/vazios
 - **Encoding:** Suporte completo a UTF-8
 
-## 🆚 Comparação: API vs Banco Local
+## [EMOJI] Comparação: API vs Banco Local
 
 ### Vantagens da API
-✅ **Dados atualizados:** Sempre os dados mais recentes  
-✅ **Dados completos:** Todos os tickets do sistema  
-✅ **Relacionamentos:** Dados de usuários, grupos, etc.  
-✅ **Integridade:** Dados diretamente da fonte  
+[OK] **Dados atualizados:** Sempre os dados mais recentes  
+[OK] **Dados completos:** Todos os tickets do sistema  
+[OK] **Relacionamentos:** Dados de usuários, grupos, etc.  
+[OK] **Integridade:** Dados diretamente da fonte  
 
 ### Vantagens do Banco Local
-✅ **Performance:** Consultas SQL mais rápidas  
-✅ **Offline:** Funciona sem conexão com o GLPI  
-✅ **Controle:** Dados sob controle local
+[OK] **Performance:** Consultas SQL mais rápidas  
+[OK] **Offline:** Funciona sem conexão com o GLPI  
+[OK] **Controle:** Dados sob controle local
 
-## 📁 Organização dos Arquivos
+## [ARQUIVO] Organização dos Arquivos
 
 Os arquivos CSV são automaticamente organizados em pastas específicas baseadas no tipo de execução:
 
-### 🗂️ Estrutura de Pastas
+### [PASTA] Estrutura de Pastas
 - **`dados/tickets_6_meses/`** - Exports dos últimos 6 meses
 - **`dados/tickets_ultimo_mes/`** - Exports do último mês  
 - **`dados/tickets_data_personalizada/`** - Exports com datas personalizadas
 - **`dados/tickets_mensais/`** - Outros períodos (3 meses, ano, etc.)
 
-### 📝 Nomenclatura dos Arquivos
+### [TEXTO] Nomenclatura dos Arquivos
 - `tickets_api_glpi_[periodo]_[timestamp].csv`
 
 **Exemplos:**
@@ -230,7 +230,7 @@ Os arquivos CSV são automaticamente organizados em pastas específicas baseadas
 - `tickets_api_glpi_ultimo_mes_20251022_144314.csv` → `dados/tickets_ultimo_mes/`
 - `tickets_api_glpi_personalizado_20251022_144329.csv` → `dados/tickets_data_personalizada/`
 
-## 🔄 Vantagens da API vs Banco Local
+## [PROCESSO] Vantagens da API vs Banco Local
 
 | Aspecto | API GLPI | Banco Local |
 |---------|----------|-------------|
@@ -239,43 +239,43 @@ Os arquivos CSV são automaticamente organizados em pastas específicas baseadas
 | **Manutenção** | Sem dependências locais | Requer configuração BD |
 | **Performance** | Boa (3.8s para 10k tickets) | Variável |
 | **Segurança** | Tokens de acesso | Credenciais de BD |
-| **Filtros** | ✅ Por período de data | ❌ Limitado |
+| **Filtros** | [OK] Por período de data | [ERRO] Limitado |
 
-## 🎯 Vantagens do Filtro de Data
+## [FOCO] Vantagens do Filtro de Data
 
-### 📊 Análises Direcionadas
+### [METRICAS] Análises Direcionadas
 - **Relatórios mensais**: Extrair apenas tickets do mês atual
 - **Análises trimestrais**: Dados dos últimos 3 meses
 - **Comparações anuais**: Tickets do ano atual vs ano passado
 
-### ⚡ Performance Otimizada
+### [EMOJI] Performance Otimizada
 - **Menos dados**: Arquivos menores e processamento mais rápido
 - **Foco específico**: Apenas os dados necessários para análise
 - **Economia de recursos**: Menor uso de memória e armazenamento
 
-### 🔧 Flexibilidade
+### [CONFIG] Flexibilidade
 - **Períodos pré-definidos**: Opções comuns já configuradas
 - **Datas personalizadas**: Qualquer período específico
 - **Formato brasileiro**: Datas no formato DD/MM/YYYY  
 
-## 🔄 Fluxo de Execução (Versão Otimizada)
+## [PROCESSO] Fluxo de Execução (Versão Otimizada)
 
-1. **🔐 Autenticação**
+1. **[EMOJI] Autenticação**
    - Inicia sessão na API
    - Valida tokens de acesso
 
-2. **🗄️ Carregamento de Caches**
+2. **[CACHE] Carregamento de Caches**
    - Usuários (todos)
    - Entidades (todas)
    - Categorias (todas)
    - Localizações (todas)
    - Grupos (todos)
 
-3. **🎫 Extração de Tickets**
+3. **[EMOJI] Extração de Tickets**
    - Busca paginada (1000 por vez)
    - Dados básicos dos tickets
 
-4. **🔗 Relacionamentos**
+4. **[EMOJI] Relacionamentos**
    - Ticket_User (em lote)
    - Group_Ticket (em lote)
 
@@ -284,44 +284,44 @@ Os arquivos CSV são automaticamente organizados em pastas específicas baseadas
    - Formatação de campos
    - Aplicação de traduções
 
-6. **💾 Geração do CSV**
+6. **[EMOJI] Geração do CSV**
    - Arquivo com timestamp
    - Encoding UTF-8
    - Aspas em todos os campos
 
-## 📝 Logs de Execução
+## [TEXTO] Logs de Execução
 
 ### Exemplo de Saída
 ```
-🚀 EXTRATOR OTIMIZADO DE DADOS DA API GLPI
+[INICIO] EXTRATOR OTIMIZADO DE DADOS DA API GLPI
 ============================================================
-🔐 Iniciando sessão na API do GLPI...
-✅ Sessão iniciada com sucesso!
-🔄 Carregando caches para otimização...
-👥 Carregando cache de usuários...
-   ✅ 1.234 usuários carregados
-🏢 Carregando cache de entidades...
-   ✅ 45 entidades carregadas
-📂 Carregando cache de categorias...
-   ✅ 67 categorias carregadas
-📍 Carregando cache de localizações...
-   ✅ 49 localizações carregadas
-👨‍💻 Carregando cache de grupos...
-   ✅ 85 grupos carregados
-✅ Todos os caches carregados!
-🎫 Buscando tickets com relacionamentos...
-✅ Total de tickets encontrados: 10,695
-🔗 Buscando relacionamentos de usuários e grupos...
+[EMOJI] Iniciando sessão na API do GLPI...
+[OK] Sessão iniciada com sucesso!
+[PROCESSO] Carregando caches para otimização...
+[EMOJI] Carregando cache de usuários...
+   [OK] 1.234 usuários carregados
+[EMOJI] Carregando cache de entidades...
+   [OK] 45 entidades carregadas
+[EMOJI] Carregando cache de categorias...
+   [OK] 67 categorias carregadas
+[EMOJI] Carregando cache de localizações...
+   [OK] 49 localizações carregadas
+[EMOJI]‍[EMOJI] Carregando cache de grupos...
+   [OK] 85 grupos carregados
+[OK] Todos os caches carregados!
+[EMOJI] Buscando tickets com relacionamentos...
+[OK] Total de tickets encontrados: 10,695
+[EMOJI] Buscando relacionamentos de usuários e grupos...
 🧹 Processando e formatando dados...
-💾 Gerando arquivo: tickets_api_glpi_otimizado_20251021_205703.csv
-✅ Extração concluída com sucesso!
-📁 Arquivo: ../dados/tickets_mensais/tickets_api_glpi_otimizado_20251021_205703.csv
-📈 Total de registros: 10,695
-🕒 Timestamp: 20251021_205703
-⏱️ Tempo de execução: 0:00:03.829617
+[EMOJI] Gerando arquivo: tickets_api_glpi_otimizado_20251021_205703.csv
+[OK] Extração concluída com sucesso!
+[ARQUIVO] Arquivo: ../dados/tickets_mensais/tickets_api_glpi_otimizado_20251021_205703.csv
+[GRAFICO] Total de registros: 10,695
+[EMOJI] Timestamp: 20251021_205703
+[TEMPO] Tempo de execução: 0:00:03.829617
 ```
 
-## 🔧 Manutenção e Atualizações
+## [CONFIG] Manutenção e Atualizações
 
 ### Atualizando Credenciais
 Para atualizar as credenciais da API, edite as variáveis no início da função `main()`:
@@ -342,29 +342,29 @@ Para adicionar/remover campos, edite:
 - **Cache:** Ajuste os ranges dos caches se necessário
 - **Timeout:** Configure timeouts nas requisições se necessário
 
-## 🚨 Troubleshooting
+## [EMOJI] Troubleshooting
 
 ### Problemas Comuns
 
 #### Erro de Autenticação
 ```
-❌ Erro ao iniciar sessão: 401
+[ERRO] Erro ao iniciar sessão: 401
 ```
 **Solução:** Verificar se os tokens estão corretos e válidos
 
 #### Timeout de Conexão
 ```
-❌ Erro na conexão: timeout
+[ERRO] Erro na conexão: timeout
 ```
 **Solução:** Verificar conectividade de rede com o servidor GLPI
 
 #### Dados Incompletos
 ```
-⚠️ Erro ao carregar usuários: 500
+[AVISO] Erro ao carregar usuários: 500
 ```
 **Solução:** Verificar se o usuário da API tem permissões adequadas
 
-## 📞 Suporte
+## [EMOJI] Suporte
 
 Para dúvidas ou problemas:
 1. Verificar logs de execução

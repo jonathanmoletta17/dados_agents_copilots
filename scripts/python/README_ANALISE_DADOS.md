@@ -1,8 +1,8 @@
-# 📊 Scripts de Análise de Dados - GLPI
+# [METRICAS] Scripts de Análise de Dados - GLPI
 
 Este conjunto de scripts permite analisar e visualizar dados dos CSVs gerados pela extração da API do GLPI, fornecendo estatísticas detalhadas, gráficos interativos e comparações entre períodos.
 
-## 📁 Scripts Disponíveis
+## [ARQUIVO] Scripts Disponíveis
 
 ### 1. `analisar_dados_csv.py` - Análise Estatística Básica
 **Objetivo**: Gera relatórios estatísticos detalhados dos dados dos tickets.
@@ -85,7 +85,7 @@ python comparar_periodos.py --pasta "caminho/para/pasta" --html
 
 ---
 
-## 📊 Campos Padronizados Analisados
+## [METRICAS] Campos Padronizados Analisados
 
 Os scripts analisam automaticamente os seguintes campos dos CSVs:
 
@@ -98,24 +98,24 @@ Os scripts analisam automaticamente os seguintes campos dos CSVs:
 | **Localizacao** | Local físico do atendimento | "1° Andar", "2° Andar", "Sem Localização" |
 | **Tecnico_atribuido** | Técnico responsável | Nome do técnico ou "Não Atribuído" |
 
-## 📈 Exemplos de Saídas
+## [GRAFICO] Exemplos de Saídas
 
 ### Análise Básica (Terminal)
 ```
-📊 RELATÓRIO COMPLETO DE ANÁLISE DE DADOS
+[METRICAS] RELATÓRIO COMPLETO DE ANÁLISE DE DADOS
 ================================================================================
 
-📁 Arquivo: tickets_api_glpi_ultimo_mes_20251022_144314.csv
-📅 Data da análise: 22/10/2025 14:53:01
-📊 Total de tickets: 372
-📋 Colunas disponíveis: 12
+[ARQUIVO] Arquivo: tickets_api_glpi_ultimo_mes_20251022_144314.csv
+[DATA] Data da análise: 22/10/2025 14:53:01
+[METRICAS] Total de tickets: 372
+[LISTA] Colunas disponíveis: 12
 
-🔍 STATUS DOS TICKETS
+[BUSCA] STATUS DOS TICKETS
 --------------------------------------------------
 Total de registros: 372
 Valores únicos: 4
 
-📈 Top 10 mais frequentes:
+[GRAFICO] Top 10 mais frequentes:
    1. Solucionado                    |  267 tickets ( 71.8%)
    2. Fechado                        |   89 tickets ( 23.9%)
    3. Em andamento (atribuído)       |   15 tickets (  4.0%)
@@ -133,7 +133,7 @@ Valores únicos: 4
 - Evolução temporal de indicadores
 - Relatórios de tendências
 
-## 🚀 Exemplos Práticos
+## [INICIO] Exemplos Práticos
 
 ### Análise Rápida de um Arquivo
 ```bash
@@ -150,23 +150,23 @@ python analisar_dados_graficos.py "C:\dados\tickets_outubro_2025.csv" --html
 python comparar_periodos.py --pasta "C:\dados\tickets_mensais" --html
 ```
 
-## 📋 Estrutura de Arquivos Gerados
+## [LISTA] Estrutura de Arquivos Gerados
 
 ```
 scripts/python/
-├── analisar_dados_csv.py
-├── analisar_dados_graficos.py
-├── comparar_periodos.py
-├── dashboard_glpi_YYYYMMDD_HHMMSS.html    # Dashboard interativo
-├── relatorio_analise_YYYYMMDD_HHMMSS.json # Dados em JSON
-├── comparacao_periodos_YYYYMMDD_HHMMSS.html # Comparação HTML
-└── graficos_glpi_YYYYMMDD_HHMMSS/          # Pasta com PNGs
-    ├── grafico_01.png
-    ├── grafico_02.png
-    └── ...
+[EMOJI] analisar_dados_csv.py
+[EMOJI] analisar_dados_graficos.py
+[EMOJI] comparar_periodos.py
+[EMOJI] dashboard_glpi_YYYYMMDD_HHMMSS.html    # Dashboard interativo
+[EMOJI] relatorio_analise_YYYYMMDD_HHMMSS.json # Dados em JSON
+[EMOJI] comparacao_periodos_YYYYMMDD_HHMMSS.html # Comparação HTML
+[EMOJI] graficos_glpi_YYYYMMDD_HHMMSS/          # Pasta com PNGs
+    [EMOJI] grafico_01.png
+    [EMOJI] grafico_02.png
+    [EMOJI] ...
 ```
 
-## 🔧 Instalação de Dependências
+## [CONFIG] Instalação de Dependências
 
 ```bash
 # Dependências básicas
@@ -179,14 +179,14 @@ pip install matplotlib seaborn plotly
 pip install kaleido
 ```
 
-## 💡 Dicas de Uso
+## [DICA] Dicas de Uso
 
 1. **Performance**: Para arquivos grandes (>10MB), use primeiro a análise básica
 2. **Visualização**: O dashboard HTML é ideal para apresentações
 3. **Comparação**: Use o script de comparação para análises mensais/anuais
 4. **Automação**: Os scripts podem ser integrados em rotinas automatizadas
 
-## 🎯 Casos de Uso Comuns
+## [FOCO] Casos de Uso Comuns
 
 - **Relatórios Mensais**: Análise de produtividade e indicadores
 - **Dashboards Gerenciais**: Visualizações para tomada de decisão

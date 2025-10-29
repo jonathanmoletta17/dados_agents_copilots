@@ -39,7 +39,7 @@ class GLPIAPIExtractorComFiltroData:
     def init_session(self):
         """Inicia sessão na API do GLPI"""
         try:
-            print("🔐 Iniciando sessão na API do GLPI...")
+            print("[SEGURANCA] Iniciando sessão na API do GLPI...")
             
             url = f"{self.api_url}/initSession"
             headers = {
@@ -54,15 +54,15 @@ class GLPIAPIExtractorComFiltroData:
                 data = response.json()
                 self.session_token = data.get('session_token')
                 self.session.headers.update({'Session-Token': self.session_token})
-                print(f"✅ Sessão iniciada com sucesso!")
+                print(f"[OK] Sessão iniciada com sucesso!")
                 return True
             else:
-                print(f"❌ Erro ao iniciar sessão: {response.status_code}")
+                print(f"[ERRO] Erro ao iniciar sessão: {response.status_code}")
                 print(f"Resposta: {response.text}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Erro na conexão: {e}")
+            print(f"[ERRO] Erro na conexão: {e}")
             return False
     
     def kill_session(self):
@@ -71,7 +71,7 @@ class GLPIAPIExtractorComFiltroData:
             try:
                 url = f"{self.api_url}/killSession"
                 response = self.session.get(url)
-                print("🔒 Sessão encerrada")
+                print("[EMOJI] Sessão encerrada")
             except:
                 pass
     
@@ -170,7 +170,7 @@ class GLPIAPIExtractorComFiltroData:
     
     def carregar_cache_usuarios(self):
         """Carrega todos os usuários em cache"""
-        print("👥 Carregando cache de usuários...")
+        print("[EMOJI] Carregando cache de usuários...")
         try:
             range_start = 0
             range_limit = 1000
@@ -199,13 +199,13 @@ class GLPIAPIExtractorComFiltroData:
                 else:
                     break
             
-            print(f"   ✅ {len(self.cache_usuarios)} usuários carregados")
+            print(f"   [OK] {len(self.cache_usuarios)} usuários carregados")
         except Exception as e:
-            print(f"   ⚠️ Erro ao carregar usuários: {e}")
+            print(f"   [AVISO] Erro ao carregar usuários: {e}")
     
     def carregar_cache_entidades(self):
         """Carrega todas as entidades em cache"""
-        print("🏢 Carregando cache de entidades...")
+        print("[EMOJI] Carregando cache de entidades...")
         try:
             url = f"{self.api_url}/Entity"
             params = {'range': '0-1000'}
@@ -217,13 +217,13 @@ class GLPIAPIExtractorComFiltroData:
                     entity_id = str(entity.get('id'))
                     self.cache_entidades[entity_id] = entity.get('name', 'Sem Entidade')
                 
-                print(f"   ✅ {len(self.cache_entidades)} entidades carregadas")
+                print(f"   [OK] {len(self.cache_entidades)} entidades carregadas")
         except Exception as e:
-            print(f"   ⚠️ Erro ao carregar entidades: {e}")
+            print(f"   [AVISO] Erro ao carregar entidades: {e}")
     
     def carregar_cache_categorias(self):
         """Carrega todas as categorias em cache"""
-        print("📂 Carregando cache de categorias...")
+        print("[EMOJI] Carregando cache de categorias...")
         try:
             url = f"{self.api_url}/ITILCategory"
             params = {'range': '0-1000'}
@@ -235,13 +235,13 @@ class GLPIAPIExtractorComFiltroData:
                     category_id = str(category.get('id'))
                     self.cache_categorias[category_id] = category.get('name', 'Sem Categoria')
                 
-                print(f"   ✅ {len(self.cache_categorias)} categorias carregadas")
+                print(f"   [OK] {len(self.cache_categorias)} categorias carregadas")
         except Exception as e:
-            print(f"   ⚠️ Erro ao carregar categorias: {e}")
+            print(f"   [AVISO] Erro ao carregar categorias: {e}")
     
     def carregar_cache_localizacoes(self):
         """Carrega todas as localizações em cache"""
-        print("📍 Carregando cache de localizações...")
+        print("[EMOJI] Carregando cache de localizações...")
         try:
             url = f"{self.api_url}/Location"
             params = {'range': '0-1000'}
@@ -253,13 +253,13 @@ class GLPIAPIExtractorComFiltroData:
                     location_id = str(location.get('id'))
                     self.cache_localizacoes[location_id] = location.get('name', 'Sem Localização')
                 
-                print(f"   ✅ {len(self.cache_localizacoes)} localizações carregadas")
+                print(f"   [OK] {len(self.cache_localizacoes)} localizações carregadas")
         except Exception as e:
-            print(f"   ⚠️ Erro ao carregar localizações: {e}")
+            print(f"   [AVISO] Erro ao carregar localizações: {e}")
     
     def carregar_cache_grupos(self):
         """Carrega todos os grupos em cache"""
-        print("👨‍💻 Carregando cache de grupos...")
+        print("[EMOJI]‍[SISTEMA] Carregando cache de grupos...")
         try:
             url = f"{self.api_url}/Group"
             params = {'range': '0-1000'}
@@ -271,23 +271,23 @@ class GLPIAPIExtractorComFiltroData:
                     group_id = str(group.get('id'))
                     self.cache_grupos[group_id] = group.get('name', 'Sem Grupo')
                 
-                print(f"   ✅ {len(self.cache_grupos)} grupos carregados")
+                print(f"   [OK] {len(self.cache_grupos)} grupos carregados")
         except Exception as e:
-            print(f"   ⚠️ Erro ao carregar grupos: {e}")
+            print(f"   [AVISO] Erro ao carregar grupos: {e}")
     
     def carregar_todos_caches(self):
         """Carrega todos os caches necessários"""
-        print("🔄 Carregando caches para otimização...")
+        print("[PROCESSANDO] Carregando caches para otimização...")
         self.carregar_cache_usuarios()
         self.carregar_cache_entidades()
         self.carregar_cache_categorias()
         self.carregar_cache_localizacoes()
         self.carregar_cache_grupos()
-        print("✅ Todos os caches carregados!")
+        print("[OK] Todos os caches carregados!")
     
     def buscar_tickets_com_filtro_data(self, data_inicial, data_final):
         """Busca todos os tickets e filtra por data durante o processamento"""
-        print(f"🎫 Buscando todos os tickets para filtrar entre {data_inicial.strftime('%d/%m/%Y')} e {data_final.strftime('%d/%m/%Y')}...")
+        print(f"[EMOJI] Buscando todos os tickets para filtrar entre {data_inicial.strftime('%d/%m/%Y')} e {data_final.strftime('%d/%m/%Y')}...")
         
         todos_tickets = []
         range_start = 0
@@ -333,7 +333,7 @@ class GLPIAPIExtractorComFiltroData:
                 
                 range_start += range_limit
             else:
-                print(f"❌ Erro ao buscar tickets: {response.status_code}")
+                print(f"[ERRO] Erro ao buscar tickets: {response.status_code}")
                 print(f"Resposta: {response.text}")
                 break
         
@@ -341,7 +341,7 @@ class GLPIAPIExtractorComFiltroData:
     
     def buscar_relacionamentos_tickets(self, ticket_ids):
         """Busca relacionamentos de usuários e grupos para os tickets"""
-        print("🔗 Buscando relacionamentos de usuários e grupos...")
+        print("[EMOJI] Buscando relacionamentos de usuários e grupos...")
         
         relacionamentos = defaultdict(lambda: {
             'requerente': 'Sem Requerente',
@@ -371,7 +371,7 @@ class GLPIAPIExtractorComFiltroData:
                         elif type_user == 2:  # Técnico
                             relacionamentos[ticket_id]['tecnico'] = nome_usuario
         except Exception as e:
-            print(f"   ⚠️ Erro ao buscar relacionamentos de usuários: {e}")
+            print(f"   [AVISO] Erro ao buscar relacionamentos de usuários: {e}")
         
         # Buscar relacionamentos de grupos
         try:
@@ -391,7 +391,7 @@ class GLPIAPIExtractorComFiltroData:
                         nome_grupo = self.cache_grupos.get(group_id, f"Grupo {group_id}")
                         relacionamentos[ticket_id]['grupo'] = nome_grupo
         except Exception as e:
-            print(f"   ⚠️ Erro ao buscar relacionamentos de grupos: {e}")
+            print(f"   [AVISO] Erro ao buscar relacionamentos de grupos: {e}")
         
         return relacionamentos
     
@@ -404,17 +404,17 @@ class GLPIAPIExtractorComFiltroData:
             # Determinar período
             if periodo_predefinido:
                 data_inicial, data_final, descricao_periodo = self.calcular_periodo_predefinido(periodo_predefinido)
-                print(f"📅 Período selecionado: {descricao_periodo}")
+                print(f"[DATA] Período selecionado: {descricao_periodo}")
             elif data_inicial and data_final:
                 descricao_periodo = f"De {data_inicial.strftime('%d/%m/%Y')} até {data_final.strftime('%d/%m/%Y')}"
-                print(f"📅 Período personalizado: {descricao_periodo}")
+                print(f"[DATA] Período personalizado: {descricao_periodo}")
             else:
                 # Padrão: últimos 6 meses
                 data_inicial, data_final, descricao_periodo = self.calcular_periodo_predefinido("ultimos_6_meses")
-                print(f"📅 Período padrão: {descricao_periodo}")
+                print(f"[DATA] Período padrão: {descricao_periodo}")
             
-            print(f"🗓️ Data inicial: {data_inicial.strftime('%d/%m/%Y %H:%M:%S')}")
-            print(f"🗓️ Data final: {data_final.strftime('%d/%m/%Y %H:%M:%S')}")
+            print(f"[EMOJI] Data inicial: {data_inicial.strftime('%d/%m/%Y %H:%M:%S')}")
+            print(f"[EMOJI] Data final: {data_final.strftime('%d/%m/%Y %H:%M:%S')}")
             print()
             
             # Carregar caches primeiro
@@ -422,10 +422,10 @@ class GLPIAPIExtractorComFiltroData:
             
             # Buscar tickets com filtro de data
             todos_tickets = self.buscar_tickets_com_filtro_data(data_inicial, data_final)
-            print(f"✅ Total de tickets encontrados no período: {len(todos_tickets):,}")
+            print(f"[OK] Total de tickets encontrados no período: {len(todos_tickets):,}")
             
             if not todos_tickets:
-                print("❌ Nenhum ticket encontrado no período especificado!")
+                print("[ERRO] Nenhum ticket encontrado no período especificado!")
                 return False
             
             # Buscar relacionamentos
@@ -470,7 +470,7 @@ class GLPIAPIExtractorComFiltroData:
                     dados_formatados.append(linha)
                     
                 except Exception as e:
-                    print(f"   ⚠️ Erro ao processar ticket {ticket.get('id', 'N/A')}: {e}")
+                    print(f"   [AVISO] Erro ao processar ticket {ticket.get('id', 'N/A')}: {e}")
                     continue
             
             # Gerar arquivo CSV
@@ -495,7 +495,7 @@ class GLPIAPIExtractorComFiltroData:
             
             caminho_arquivo = f"{pasta_destino}/{nome_arquivo}"
             
-            print(f"💾 Gerando arquivo: {nome_arquivo}")
+            print(f"[EMOJI] Gerando arquivo: {nome_arquivo}")
             
             with open(caminho_arquivo, 'w', newline='', encoding='utf-8') as arquivo_csv:
                 escritor = csv.writer(arquivo_csv, quoting=csv.QUOTE_ALL)
@@ -511,16 +511,16 @@ class GLPIAPIExtractorComFiltroData:
                 # Dados
                 escritor.writerows(dados_formatados)
             
-            print(f"\n✅ Extração concluída com sucesso!")
-            print(f"📁 Arquivo: {caminho_arquivo}")
-            print(f"📈 Total de registros: {len(dados_formatados):,}")
-            print(f"📅 Período: {descricao_periodo}")
-            print(f"🕒 Timestamp: {timestamp}")
+            print(f"\n[OK] Extração concluída com sucesso!")
+            print(f"[ARQUIVO] Arquivo: {caminho_arquivo}")
+            print(f"[GRAFICO] Total de registros: {len(dados_formatados):,}")
+            print(f"[DATA] Período: {descricao_periodo}")
+            print(f"[EMOJI] Timestamp: {timestamp}")
             
             return True
             
         except Exception as e:
-            print(f"❌ Erro durante extração: {e}")
+            print(f"[ERRO] Erro durante extração: {e}")
             return False
         
         finally:
@@ -543,27 +543,27 @@ def main():
     args = parser.parse_args()
     
     print("=" * 70)
-    print("🚀 EXTRATOR DE DADOS DA API GLPI COM FILTRO DE DATA")
+    print("[INICIO] EXTRATOR DE DADOS DA API GLPI COM FILTRO DE DATA")
     print("=" * 70)
     
     # Importar configurações
     try:
         from config import API_URL, APP_TOKEN, USER_TOKEN
-        print("✅ Configurações carregadas de config.py")
+        print("[OK] Configurações carregadas de config.py")
     except ImportError:
-        print("❌ ERRO: Arquivo config.py não encontrado!")
-        print("📋 INSTRUÇÕES:")
+        print("[ERRO] ERRO: Arquivo config.py não encontrado!")
+        print("[LISTA] INSTRUÇÕES:")
         print("   1. Copie config_exemplo.py para config.py")
         print("   2. Edite config.py com seus tokens reais")
         print("   3. Execute o script novamente")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ ERRO ao carregar configurações: {e}")
+        print(f"[ERRO] ERRO ao carregar configurações: {e}")
         sys.exit(1)
     
-    print(f"🔗 API URL: {API_URL}")
-    print(f"🔑 App Token: {APP_TOKEN[:10]}...")
-    print(f"👤 User Token: {USER_TOKEN[:10]}...")
+    print(f"[EMOJI] API URL: {API_URL}")
+    print(f"[EMOJI] App Token: {APP_TOKEN[:10]}...")
+    print(f"[EMOJI] User Token: {USER_TOKEN[:10]}...")
     print()
     
     # Processar argumentos
@@ -578,12 +578,12 @@ def main():
             data_final = data_final.replace(hour=23, minute=59, second=59)  # Fim do dia
             periodo_predefinido = None
         except ValueError:
-            print("❌ Formato de data inválido! Use DD/MM/YYYY")
+            print("[ERRO] Formato de data inválido! Use DD/MM/YYYY")
             return
     
     # Se não especificou nada, usar modo interativo
     if not periodo_predefinido and not (data_inicial and data_final):
-        print("📋 OPÇÕES DE PERÍODO:")
+        print("[LISTA] OPÇÕES DE PERÍODO:")
         print("1. Último mês")
         print("2. Últimos 3 meses")
         print("3. Últimos 6 meses (padrão)")
@@ -642,11 +642,11 @@ def main():
     
     print("\n" + "=" * 70)
     if sucesso:
-        print("🎉 EXTRAÇÃO CONCLUÍDA COM SUCESSO!")
+        print("[SUCESSO] EXTRAÇÃO CONCLUÍDA COM SUCESSO!")
     else:
-        print("❌ EXTRAÇÃO FALHOU!")
+        print("[ERRO] EXTRAÇÃO FALHOU!")
     
-    print(f"⏱️  Tempo de execução: {duracao}")
+    print(f"[TEMPO]  Tempo de execução: {duracao}")
     print("=" * 70)
 
 if __name__ == "__main__":

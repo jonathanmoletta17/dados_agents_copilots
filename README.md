@@ -1,254 +1,272 @@
-# 🎫 Sistema de Extração e Análise de Dados GLPI
+# [METRICAS] Sistema de Extração e Análise de Dados GLPI
 
-Sistema completo para extração, análise e visualização de dados de tickets do sistema GLPI, desenvolvido para o Governo do Estado do Rio Grande do Sul.
+Sistema completo para extração, análise e visualização de dados de tickets do GLPI via API REST.
 
-## 🔒 CONFIGURAÇÃO DE SEGURANÇA (IMPORTANTE!)
+## [INICIO] Início Rápido
 
-**ANTES DE USAR O SISTEMA:**
-
-1. **Configure suas credenciais:**
-   ```bash
-   cd scripts/python
-   cp config_exemplo.py config.py
-   # Edite config.py com seus tokens reais da API GLPI
-   ```
-
-2. **Nunca commite credenciais:**
-   - O arquivo `config.py` está no `.gitignore`
-   - Use apenas `config_exemplo.py` como referência
-   - Mantenha seus tokens seguros e privados
-
-3. **Dados sensíveis protegidos:**
-   - Todos os CSVs com dados reais estão no `.gitignore`
-   - Relatórios e métricas geradas não sobem para o Git
-   - Apenas código-fonte e documentação são versionados
-
-## 📋 Visão Geral
-
-Este projeto oferece uma solução completa para:
-- **Extração automatizada** de dados dos últimos 3 meses via API do GLPI
-- **Análise estatística** automática com métricas e indicadores
-- **Relatórios completos** em formato texto e JSON
-- **Processo orquestrado** com execução única e automática
-- **Visualizações interativas** com dashboards e gráficos (scripts legados)
-- **Comparações temporais** entre diferentes períodos (scripts legados)
-
-## 🚀 PROCESSO AUTOMATIZADO (RECOMENDADO)
-
-### ⚡ Execução Única e Completa
-**Script Principal**: `executar_processo_completo.py`
-
-Execute todo o processo com um único comando:
-
+### 1. Configuração Inicial
 ```bash
-python executar_processo_completo.py
+# Navegar para o diretório dos scripts
+cd scripts/python
+
+# Instalar dependências
+pip install -r requirements_api.txt
+
+# Configurar credenciais da API GLPI
+cp config_exemplo.py config.py
+# Editar config.py com suas credenciais reais
 ```
 
-**O que acontece automaticamente:**
-1. 📥 **Extração**: Coleta dados dos últimos 3 meses da API GLPI
-2. 📊 **Análise**: Processa dados e calcula métricas completas
-3. 📝 **Relatórios**: Gera relatórios em texto e JSON
-4. 📋 **Log**: Registra todo o processo de execução
-
-**Arquivos gerados:**
-- `tickets_automatico_3meses_[timestamp].csv` - Dados extraídos
-- `relatorio_analise_tickets_[timestamp].txt` - Relatório completo
-- `metricas_tickets_[timestamp].json` - Métricas em JSON
-- `log_execucao_completa_[timestamp].txt` - Log da execução
-
-### 🔧 Configuração do Período
-Para alterar o período de extração, edite o arquivo `extrair_dados_automatico.py`:
+### 2. Configurar Credenciais (OBRIGATÓRIO)
+Edite o arquivo `scripts/python/config.py` com suas credenciais:
 
 ```python
-# Linha 25 - Altere o número de dias
-self.PERIODO_DIAS = 90  # 3 meses = 90 dias
+# Configurações da API GLPI
+GLPI_URL = "http://cau.ppiratini.intra.rs.gov.br/glpi/apirest.php"
+APP_TOKEN = "seu_app_token_real"
+USER_TOKEN = "seu_user_token_real"
+
+# Configurações opcionais
+TIMEOUT = 30
+CACHE_ENABLED = True
+DEBUG = False
 ```
 
-### 📊 Métricas Calculadas Automaticamente
-- Taxa de resolução de tickets
-- Distribuição por status, entidade, categoria
-- Análise temporal (mês, dia da semana, hora)
-- Top técnicos e grupos mais produtivos
-- Palavras-chave mais frequentes
-- Análise de performance e produtividade
+### 3. Executar o Sistema
+```bash
+# Extração interativa (últimos 6 meses)
+python extrair_dados_api_glpi_com_filtro_data.py
 
-## 🏗️ Estrutura do Projeto
+# Análise de métricas
+python extrair_metricas_tickets.py
+
+# API de métricas (acesse http://localhost:5000)
+python api_metricas.py
+```
+
+## [ARQUIVO] Estrutura do Projeto
 
 ```
 bd_cau/
-├── scripts/
-│   ├── dados/                        # Dados extraídos (organizados automaticamente)
-│   │   ├── tickets_automatico/       # 🆕 Dados do processo automatizado
-│   │   ├── relatorios_automatico/    # 🆕 Relatórios gerados automaticamente
-│   │   ├── logs_execucao/           # 🆕 Logs de execução
-│   │   ├── tickets_6_meses/         # Dados legados
-│   │   ├── tickets_data_personalizada/
-│   │   ├── tickets_mensais/
-│   │   └── tickets_ultimo_mes/
-│   └── python/                       # Scripts Python
-│       ├── executar_processo_completo.py      # 🆕 ⭐ SCRIPT PRINCIPAL
-│       ├── extrair_dados_automatico.py        # 🆕 Extração automatizada
-│       ├── analisar_dados_automatico.py       # 🆕 Análise automatizada
-│       ├── extrair_dados_api_glpi_com_filtro_data.py  # Script legado
-│       ├── analisar_dados_csv.py              # Análise estatística legada
-│       ├── analisar_dados_graficos.py         # Dashboards e gráficos
-│       ├── comparar_periodos.py               # Comparação temporal
-│       ├── README_API_GLPI.md                 # Doc. extração
-│       └── README_ANALISE_DADOS.md            # Doc. análise
-└── README.md                         # Este arquivo
+[EMOJI] [EMOJI] README.md                                     # Este arquivo
+[EMOJI] [EMOJI] CONFIGURACAO_INICIAL.md                       # (será removido)
+[EMOJI] [EMOJI] .gitignore                                    # Arquivos protegidos
+[EMOJI] [EMOJI] scripts/
+    [EMOJI] [EMOJI] dados/                                    # Dados extraídos (protegido)
+    [EMOJI]   [EMOJI] metricas_csv/                           # Métricas em CSV
+    [EMOJI]   [EMOJI] relatorios_metricas/                    # Relatórios gerados
+    [EMOJI]   [EMOJI] tickets_6_meses/                        # Dados de tickets
+    [EMOJI] [EMOJI] python/
+        [EMOJI] [EMOJI] extrair_dados_api_glpi_com_filtro_data.py  # Script principal
+        [EMOJI] [EMOJI] extrair_metricas_tickets.py               # Análise de métricas
+        [EMOJI] [EMOJI] api_metricas.py                           # API REST
+        [EMOJI] [CONFIG] config_exemplo.py                         # Template de config
+        [EMOJI] [LISTA] requirements_api.txt                      # Dependências
 ```
 
----
+## [CONFIG] Scripts Principais
 
-## 📚 SCRIPTS LEGADOS (Uso Avançado)
+### [METRICAS] `extrair_dados_api_glpi_com_filtro_data.py`
+**Script principal para extração de dados da API GLPI**
 
-### 1. 📡 Extração de Dados Manual (API GLPI)
-**Script**: `extrair_dados_api_glpi_com_filtro_data.py`
+**Recursos:**
+- [OK] Extração por período (dias, semanas, meses)
+- [OK] Cache inteligente de usuários (incluindo excluídos)
+- [OK] Correção automática para usuários não encontrados
+- [OK] Exportação para CSV
+- [OK] Suporte a argumentos de linha de comando
 
-- ✅ Extração via API REST do GLPI
-- ✅ Filtros por período (data de abertura/atualização)
-- ✅ Sistema de cache para performance
-- ✅ Limpeza e formatação automática
-- ✅ Múltiplos formatos de saída
-
-**Uso**:
+**Uso:**
 ```bash
-# Último mês
-python extrair_dados_api_glpi_com_filtro_data.py --periodo ultimo_mes
+# Modo interativo
+python extrair_dados_api_glpi_com_filtro_data.py
 
-# Período personalizado
-python extrair_dados_api_glpi_com_filtro_data.py --data-inicio 2025-10-01 --data-fim 2025-10-31
+# Com argumentos específicos
+python extrair_dados_api_glpi_com_filtro_data.py --periodo 30 --formato csv
 
-# Últimos 6 meses
-python extrair_dados_api_glpi_com_filtro_data.py --periodo 6_meses
+# Ver todas as opções
+python extrair_dados_api_glpi_com_filtro_data.py --help
 ```
 
-### 2. 📊 Análise Estatística
-**Script**: `analisar_dados_csv.py`
+**Opções de período:**
+- `1` - Últimos 30 dias
+- `2` - Últimos 3 meses  
+- `3` - Últimos 6 meses (padrão)
+- `4` - Último ano
+- `5` - Período personalizado
 
-- ✅ Contabilização automática de campos padronizados
-- ✅ Cálculo de percentuais e frequências
-- ✅ Análise temporal (dias da semana, períodos)
-- ✅ Exportação para JSON
+### [GRAFICO] `extrair_metricas_tickets.py`
+**Análise completa de métricas e KPIs**
 
-**Campos Analisados**:
-- Status dos tickets
-- Entidades solicitantes
-- Grupos técnicos
-- Categorias de atendimento
-- Localizações
-- Técnicos atribuídos
+**Métricas geradas:**
+- [METRICAS] Tickets por categoria
+- [EMOJI] Tickets por técnico
+- [EMOJI] Tickets por entidade
+- [EMOJI] Tickets por localização
+- [TEMPO] Tempos de resolução
+- [GRAFICO] Tendências temporais
 
-### 3. 📈 Dashboards e Visualizações
-**Script**: `analisar_dados_graficos.py`
+**Arquivos gerados:**
+- `metricas_categorias.csv` - Análise por categoria
+- `metricas_tecnicos.csv` - Performance de técnicos
+- `metricas_entidades.csv` - Distribuição por entidade
+- `metricas_localizacoes.csv` - Análise geográfica
+- `metricas_tempos_resolucao.csv` - KPIs de tempo
 
-- ✅ Gráficos interativos (pizza, barras, linha)
-- ✅ Dashboard HTML responsivo
-- ✅ Análises temporais avançadas
-- ✅ Matriz de correlação
-- ✅ Exportação PNG para apresentações
+### [EMOJI] `api_metricas.py`
+**API REST para consulta de métricas em tempo real**
 
-### 4. 🔄 Comparação entre Períodos
-**Script**: `comparar_periodos.py`
+**Endpoints disponíveis:**
+- `GET /` - Página inicial
+- `GET /status` - Status da API
+- `GET /metricas` - Métricas gerais
+- `GET /categorias` - Top categorias
+- `POST /analisar` - Análise completa
 
-- ✅ Comparação automática de múltiplos CSVs
-- ✅ Análise de evolução temporal
-- ✅ Gráficos comparativos
-- ✅ Relatórios de tendências
-
-
-
-## 🎯 Casos de Uso
-
-### 📅 Relatórios Mensais
+**Iniciar servidor:**
 ```bash
-# 1. Extrair dados do mês
-python extrair_dados_api_glpi_com_filtro_data.py --periodo ultimo_mes
-
-# 2. Gerar dashboard
-python analisar_dados_graficos.py "dados/tickets_ultimo_mes/arquivo.csv" --html
-
-# 3. Análise estatística
-python analisar_dados_csv.py "dados/tickets_ultimo_mes/arquivo.csv" --salvar-json
+python api_metricas.py
+# Acesse: http://localhost:5000
 ```
 
-### 📊 Análise Comparativa Trimestral
+## [LISTA] Funcionalidades
+
+### [OK] Extração via API
+- Dados atualizados em tempo real do GLPI
+- Filtros por período flexíveis
+- Cache inteligente para performance
+
+### [OK] Correção de Usuários Excluídos
+O sistema automaticamente:
+- Detecta usuários excluídos da API
+- Mantém cache local de usuários
+- Adiciona sufixo "(não encontrado na API)" para usuários excluídos
+- Garante relatórios 100% confiáveis
+
+### [OK] Análise de Métricas
+- Status, entidades, categorias
+- Produtividade de técnicos
+- Padrões temporais
+- KPIs de performance
+
+### [OK] Múltiplos Formatos
+- CSV para planilhas
+- JSON para integração
+- Relatórios em texto
+- API REST para consultas
+
+### [OK] Cache Inteligente
+- Cache automático de usuários, entidades, categorias
+- Reduz chamadas à API
+- Melhora performance significativamente
+- Atualização automática quando necessário
+
+### [OK] Segurança
+- Credenciais protegidas em `config.py`
+- Dados sensíveis no `.gitignore`
+- Tokens seguros para ambiente controlado
+
+## [GRAFICO] Exemplos de Uso
+
+### Extração Básica
 ```bash
-# 1. Comparar últimos 3 meses
-python comparar_periodos.py --pasta "dados/tickets_mensais" --html
+cd scripts/python
+# Extrair últimos 6 meses (padrão)
+python extrair_dados_api_glpi_com_filtro_data.py
+# Escolha opção 3 quando solicitado
 ```
 
-### 🎨 Apresentações Executivas
+### Análise Completa
 ```bash
-# Dashboard completo com gráficos PNG
-python analisar_dados_graficos.py "arquivo.csv" --html --png
+# 1. Extrair dados
+python extrair_dados_api_glpi_com_filtro_data.py
+
+# 2. Gerar métricas
+python extrair_metricas_tickets.py
+
+# 3. Iniciar API para visualização
+python api_metricas.py
 ```
 
-## 📦 Dependências
-
-### Python
+### Automação
 ```bash
-pip install pandas requests plotly matplotlib seaborn kaleido
+# Script automatizado para relatório mensal
+python extrair_dados_api_glpi_com_filtro_data.py --periodo 30 --formato csv
+python extrair_metricas_tickets.py
 ```
 
-### Sistema
-- Python 3.7+
-- Acesso à API do GLPI
+## [EMOJI] Solução de Problemas
 
-## ⚙️ Configuração
+### Erro de Configuração
+| Erro | Solução |
+|------|---------|
+| `config.py não encontrado` | Copie `config_exemplo.py` para `config.py` |
+| `Erro de autenticação` | Verifique tokens no GLPI |
+| `Módulo não encontrado` | Execute `pip install -r requirements_api.txt` |
 
-### 1. API GLPI
-Configure as credenciais da API no script principal:
-```python
-# Configurações da API (editar no script)
-GLPI_URL = "https://seu-glpi.com/apirest.php"
-APP_TOKEN = "seu_app_token"
-USER_TOKEN = "seu_user_token"
+### Erro de Conexão
+```bash
+# Verificar conectividade
+python -c "import requests; print(requests.get('http://cau.ppiratini.intra.rs.gov.br/glpi/apirest.php/initSession').status_code)"
 ```
 
+### Usuários Não Encontrados
+- [OK] **Resolvido automaticamente** - O sistema corrige automaticamente
+- Usuários excluídos aparecem com sufixo "(não encontrado na API)"
+- Cache manual para usuários problemáticos (1439, 1392, 1386)
 
+### Performance Lenta
+- Verifique se o cache está habilitado
+- Reduza o período de extração
+- Use filtros mais específicos
 
-## 📈 Indicadores Extraídos
+## [METRICAS] Arquivos de Saída
 
-### Principais Métricas
-- **Volume de Tickets**: Total por período
-- **Status**: Distribuição (Solucionado, Fechado, Em andamento)
-- **Entidades**: Tickets por órgão/secretaria
-- **Performance**: Tickets por técnico e grupo
-- **Categorias**: Tipos de atendimento mais frequentes
-- **Temporal**: Padrões por dia da semana, hora, mês
+### Dados Extraídos
+- `tickets_api_glpi_ultimos_X_meses_YYYYMMDD_HHMMSS.csv`
+- Formato CSV com campos padronizados
+- ID, Título, Entidade, Status, Datas, Técnico, Categoria, etc.
 
-### Análises Avançadas
-- **Tendências**: Evolução temporal de indicadores
-- **Correlações**: Relacionamentos entre campos
-- **Produtividade**: Análise por técnico e grupo
-- **Sazonalidade**: Padrões temporais de demanda
+### Métricas
+Localizados em `scripts/dados/metricas_csv/`:
+- `metricas_categorias.csv`
+- `metricas_tecnicos.csv`
+- `metricas_entidades.csv`
+- `metricas_localizacoes.csv`
+- `metricas_tempos_resolucao.csv`
 
-## 🔧 Manutenção
+### Relatórios
+Localizados em `scripts/dados/relatorios_metricas/`:
+- Relatórios detalhados em formato texto
+- Análises temporais
+- Gráficos e visualizações
 
-### Estrutura de Dados
-Os CSVs gerados seguem o padrão:
-```
-ID, Titulo, Entidade, Status, Ultima_atualizacao, Data_abertura, 
-Requerente, Tecnico_atribuido, Grupo_tecnico, Categoria, Localizacao, Descricao
-```
+## [FOCO] Status do Projeto
 
-### Organização de Arquivos
-- **tickets_ultimo_mes/**: Dados do mês atual
-- **tickets_mensais/**: Histórico mensal
-- **tickets_6_meses/**: Dados semestrais
-- **tickets_data_personalizada/**: Extrações específicas
+- [OK] **Extração de dados:** Funcionando 100%
+- [OK] **Correção de usuários excluídos:** Implementado
+- [OK] **Análise de métricas:** Funcionando
+- [OK] **API REST:** Funcionando
+- [OK] **Cache inteligente:** Implementado
+- [OK] **Documentação:** Consolidada
 
-## 📞 Suporte
+## [EMOJI] Segurança e Boas Práticas
+
+- **Credenciais protegidas**: `config.py` não é versionado
+- **Dados sensíveis**: CSVs e relatórios no `.gitignore`
+- **Tokens seguros**: Use apenas em ambiente controlado
+- [ERRO] **NUNCA** commite credenciais ou dados reais
+
+## [EMOJI] Suporte
 
 Para dúvidas ou problemas:
-1. Consulte a documentação específica em cada pasta
-2. Verifique os logs de execução dos scripts
-3. Valide as configurações de API e banco
+1. Verifique este README
+2. Execute scripts com `--help` para ver opções
+3. Verifique logs de erro para diagnóstico
+4. Valide configurações da API GLPI
 
 ---
 
-**Desenvolvido para**: Governo do Estado do Rio Grande do Sul  
-**Sistema**: GLPI - Gestão de Tickets  
-**Versão**: 1.0 - Produção  
-**Data**: Outubro 2025
+**Sistema GLPI - Governo do Estado do Rio Grande do Sul**  
+**Última atualização:** 23/10/2025  
+**Status:** [OK] Projeto funcional e pronto para produção

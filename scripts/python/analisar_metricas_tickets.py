@@ -31,15 +31,15 @@ class AnalisadorMetricasTickets:
     def exibir_cabecalho(self):
         """Exibe o cabeçalho do programa"""
         print("=" * 70)
-        print("🔍 ANALISADOR DE MÉTRICAS DE TICKETS GLPI")
+        print("[BUSCA] ANALISADOR DE MÉTRICAS DE TICKETS GLPI")
         print("=" * 70)
-        print("📊 Análise de dados dos tickets extraídos da API GLPI")
-        print("📈 Geração de relatórios e estatísticas detalhadas")
+        print("[METRICAS] Análise de dados dos tickets extraídos da API GLPI")
+        print("[GRAFICO] Geração de relatórios e estatísticas detalhadas")
         print()
         
     def listar_arquivos_disponiveis(self):
         """Lista todos os arquivos CSV disponíveis organizados por período"""
-        print("📁 ARQUIVOS DISPONÍVEIS PARA ANÁLISE:")
+        print("[ARQUIVO] ARQUIVOS DISPONÍVEIS PARA ANÁLISE:")
         print("-" * 50)
         
         opcoes = {}
@@ -47,9 +47,9 @@ class AnalisadorMetricasTickets:
         
         # Mapear pastas para descrições amigáveis
         pastas_info = {
-            "tickets_ultimo_mes": "📅 Último mês",
-            "tickets_mensais": "📅 Últimos 3 meses", 
-            "tickets_6_meses": "📅 Últimos 6 meses"
+            "tickets_ultimo_mes": "[DATA] Último mês",
+            "tickets_mensais": "[DATA] Últimos 3 meses", 
+            "tickets_6_meses": "[DATA] Últimos 6 meses"
         }
         
         for pasta, descricao in pastas_info.items():
@@ -73,7 +73,7 @@ class AnalisadorMetricasTickets:
                             data_formatada = "Data não identificada"
                             
                         print(f"   {contador}. {nome_arquivo}")
-                        print(f"      📅 Gerado em: {data_formatada}")
+                        print(f"      [DATA] Gerado em: {data_formatada}")
                         opcoes[contador] = {
                             'arquivo': arquivo,
                             'pasta': pasta,
@@ -83,8 +83,8 @@ class AnalisadorMetricasTickets:
                         contador += 1
         
         if not opcoes:
-            print("❌ Nenhum arquivo CSV encontrado!")
-            print("💡 Execute primeiro o script de extração de dados.")
+            print("[ERRO] Nenhum arquivo CSV encontrado!")
+            print("[DICA] Execute primeiro o script de extração de dados.")
             return None
             
         return opcoes
@@ -95,15 +95,15 @@ class AnalisadorMetricasTickets:
         if not opcoes:
             return False
             
-        print(f"\n📋 SELEÇÃO DE ARQUIVO:")
+        print(f"\n[LISTA] SELEÇÃO DE ARQUIVO:")
         print("-" * 30)
         
         while True:
             try:
-                escolha = input(f"🔢 Digite o número do arquivo para analisar (1-{len(opcoes)}): ").strip()
+                escolha = input(f"[EMOJI] Digite o número do arquivo para analisar (1-{len(opcoes)}): ").strip()
                 
                 if not escolha:
-                    print("❌ Por favor, digite um número.")
+                    print("[ERRO] Por favor, digite um número.")
                     continue
                     
                 escolha = int(escolha)
@@ -113,49 +113,49 @@ class AnalisadorMetricasTickets:
                     self.arquivo_selecionado = arquivo_info['arquivo']
                     self.periodo_selecionado = arquivo_info['pasta']
                     
-                    print(f"\n✅ Arquivo selecionado:")
-                    print(f"   📄 {arquivo_info['nome']}")
-                    print(f"   📅 {arquivo_info['data']}")
-                    print(f"   📁 Período: {arquivo_info['pasta'].replace('tickets_', '').replace('_', ' ')}")
+                    print(f"\n[OK] Arquivo selecionado:")
+                    print(f"   [EMOJI] {arquivo_info['nome']}")
+                    print(f"   [DATA] {arquivo_info['data']}")
+                    print(f"   [ARQUIVO] Período: {arquivo_info['pasta'].replace('tickets_', '').replace('_', ' ')}")
                     return True
                 else:
-                    print(f"❌ Opção inválida. Digite um número entre 1 e {len(opcoes)}.")
+                    print(f"[ERRO] Opção inválida. Digite um número entre 1 e {len(opcoes)}.")
                     
             except ValueError:
-                print("❌ Por favor, digite apenas números.")
+                print("[ERRO] Por favor, digite apenas números.")
             except KeyboardInterrupt:
-                print("\n\n👋 Análise cancelada pelo usuário.")
+                print("\n\n[EMOJI] Análise cancelada pelo usuário.")
                 return False
                 
     def carregar_dados(self):
         """Carrega os dados do arquivo CSV selecionado"""
         try:
-            print(f"\n🔄 Carregando dados do arquivo...")
+            print(f"\n[PROCESSO] Carregando dados do arquivo...")
             self.df = pd.read_csv(self.arquivo_selecionado, encoding='utf-8')
-            print(f"✅ {len(self.df)} registros carregados com sucesso!")
+            print(f"[OK] {len(self.df)} registros carregados com sucesso!")
             return True
         except Exception as e:
-            print(f"❌ Erro ao carregar arquivo: {e}")
+            print(f"[ERRO] Erro ao carregar arquivo: {e}")
             return False
             
     def gerar_metricas_gerais(self):
         """Gera métricas gerais dos tickets"""
         print("\n" + "=" * 70)
-        print("📊 MÉTRICAS GERAIS")
+        print("[METRICAS] MÉTRICAS GERAIS")
         print("=" * 70)
         
         total_tickets = len(self.df)
-        print(f"🎫 Total de tickets: {total_tickets:,}")
+        print(f"[EMOJI] Total de tickets: {total_tickets:,}")
         
         # Análise por Status
-        print(f"\n📈 DISTRIBUIÇÃO POR STATUS:")
+        print(f"\n[GRAFICO] DISTRIBUIÇÃO POR STATUS:")
         status_counts = self.df['Status'].value_counts()
         for status, count in status_counts.items():
             percentual = (count / total_tickets) * 100
             print(f"   • {status}: {count:,} ({percentual:.1f}%)")
             
         # Análise por Entidade
-        print(f"\n🏢 DISTRIBUIÇÃO POR ENTIDADE:")
+        print(f"\n[EMOJI] DISTRIBUIÇÃO POR ENTIDADE:")
         entidade_counts = self.df['Entidade'].value_counts().head(10)
         for entidade, count in entidade_counts.items():
             percentual = (count / total_tickets) * 100
@@ -166,14 +166,14 @@ class AnalisadorMetricasTickets:
             print(f"   • ... e mais {outros} entidades")
             
         # Análise por Grupo Técnico
-        print(f"\n👥 DISTRIBUIÇÃO POR GRUPO TÉCNICO:")
+        print(f"\n[EMOJI] DISTRIBUIÇÃO POR GRUPO TÉCNICO:")
         grupo_counts = self.df['Grupo_tecnico'].value_counts().head(10)
         for grupo, count in grupo_counts.items():
             percentual = (count / total_tickets) * 100
             print(f"   • {grupo}: {count:,} ({percentual:.1f}%)")
             
         # Análise por Categoria
-        print(f"\n📂 PRINCIPAIS CATEGORIAS:")
+        print(f"\n[EMOJI] PRINCIPAIS CATEGORIAS:")
         categoria_counts = self.df['Categoria'].value_counts().head(10)
         for categoria, count in categoria_counts.items():
             percentual = (count / total_tickets) * 100
@@ -194,12 +194,12 @@ class AnalisadorMetricasTickets:
             data_min = self.df['Data_abertura_dt'].min()
             data_max = self.df['Data_abertura_dt'].max()
             
-            print(f"📅 Período analisado:")
+            print(f"[DATA] Período analisado:")
             print(f"   • De: {data_min.strftime('%d/%m/%Y')}")
             print(f"   • Até: {data_max.strftime('%d/%m/%Y')}")
             
             # Tickets por mês
-            print(f"\n📈 TICKETS POR MÊS:")
+            print(f"\n[GRAFICO] TICKETS POR MÊS:")
             self.df['Mes_abertura'] = self.df['Data_abertura_dt'].dt.to_period('M')
             tickets_por_mes = self.df['Mes_abertura'].value_counts().sort_index()
             
@@ -207,7 +207,7 @@ class AnalisadorMetricasTickets:
                 print(f"   • {mes}: {count:,} tickets")
                 
             # Tickets por dia da semana
-            print(f"\n📊 TICKETS POR DIA DA SEMANA:")
+            print(f"\n[METRICAS] TICKETS POR DIA DA SEMANA:")
             dias_semana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
             self.df['Dia_semana'] = self.df['Data_abertura_dt'].dt.dayofweek
             tickets_por_dia = self.df['Dia_semana'].value_counts().sort_index()
@@ -218,16 +218,16 @@ class AnalisadorMetricasTickets:
                 print(f"   • {dia_nome}: {count:,} ({percentual:.1f}%)")
                 
         except Exception as e:
-            print(f"❌ Erro ao processar métricas temporais: {e}")
+            print(f"[ERRO] Erro ao processar métricas temporais: {e}")
             
     def gerar_metricas_performance(self):
         """Gera métricas de performance e produtividade"""
         print("\n" + "=" * 70)
-        print("🚀 MÉTRICAS DE PERFORMANCE")
+        print("[INICIO] MÉTRICAS DE PERFORMANCE")
         print("=" * 70)
         
         # Top técnicos por volume
-        print(f"🏆 TOP 10 TÉCNICOS POR VOLUME:")
+        print(f"[EMOJI] TOP 10 TÉCNICOS POR VOLUME:")
         tecnicos = self.df['Tecnico_atribuido'].value_counts().head(10)
         for i, (tecnico, count) in enumerate(tecnicos.items(), 1):
             percentual = (count / len(self.df)) * 100
@@ -236,10 +236,10 @@ class AnalisadorMetricasTickets:
         # Tickets sem técnico atribuído
         sem_tecnico = self.df['Tecnico_atribuido'].isna().sum()
         if sem_tecnico > 0:
-            print(f"\n⚠️  Tickets sem técnico atribuído: {sem_tecnico:,}")
+            print(f"\n[AVISO]  Tickets sem técnico atribuído: {sem_tecnico:,}")
             
         # Análise de localização
-        print(f"\n📍 PRINCIPAIS LOCALIZAÇÕES:")
+        print(f"\n[EMOJI] PRINCIPAIS LOCALIZAÇÕES:")
         localizacoes = self.df['Localizacao'].value_counts().head(10)
         for localizacao, count in localizacoes.items():
             if pd.notna(localizacao) and localizacao != "Sem Localização":
@@ -263,9 +263,9 @@ class AnalisadorMetricasTickets:
                 f.write("=" * 80 + "\n")
                 f.write("RELATÓRIO DE MÉTRICAS - TICKETS GLPI\n")
                 f.write("=" * 80 + "\n")
-                f.write(f"📅 Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}\n")
-                f.write(f"📄 Arquivo analisado: {os.path.basename(self.arquivo_selecionado)}\n")
-                f.write(f"📊 Total de registros: {len(self.df):,}\n")
+                f.write(f"[DATA] Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}\n")
+                f.write(f"[EMOJI] Arquivo analisado: {os.path.basename(self.arquivo_selecionado)}\n")
+                f.write(f"[METRICAS] Total de registros: {len(self.df):,}\n")
                 f.write("\n")
                 
                 # Métricas gerais
@@ -303,11 +303,11 @@ class AnalisadorMetricasTickets:
                     percentual = (count / len(self.df)) * 100
                     f.write(f"{tecnico}: {count:,} ({percentual:.1f}%)\n")
                 
-            print(f"\n💾 Relatório salvo em: {caminho_relatorio}")
+            print(f"\n[EMOJI] Relatório salvo em: {caminho_relatorio}")
             return True
             
         except Exception as e:
-            print(f"❌ Erro ao gerar relatório: {e}")
+            print(f"[ERRO] Erro ao gerar relatório: {e}")
             return False
     
     def coletar_metricas_estruturadas(self):
@@ -423,7 +423,7 @@ class AnalisadorMetricasTickets:
             return True
             
         except Exception as e:
-            print(f"❌ Erro ao coletar métricas estruturadas: {e}")
+            print(f"[ERRO] Erro ao coletar métricas estruturadas: {e}")
             return False
     
     def exportar_json(self):
@@ -443,11 +443,11 @@ class AnalisadorMetricasTickets:
             with open(caminho_json, 'w', encoding='utf-8') as f:
                 json.dump(self.metricas_estruturadas, f, ensure_ascii=False, indent=2)
             
-            print(f"📄 JSON exportado: {caminho_json}")
+            print(f"[EMOJI] JSON exportado: {caminho_json}")
             return caminho_json
             
         except Exception as e:
-            print(f"❌ Erro ao exportar JSON: {e}")
+            print(f"[ERRO] Erro ao exportar JSON: {e}")
             return None
     
     def exportar_yaml(self):
@@ -467,11 +467,11 @@ class AnalisadorMetricasTickets:
             with open(caminho_yaml, 'w', encoding='utf-8') as f:
                 yaml.dump(self.metricas_estruturadas, f, default_flow_style=False, allow_unicode=True, indent=2)
             
-            print(f"📄 YAML exportado: {caminho_yaml}")
+            print(f"[EMOJI] YAML exportado: {caminho_yaml}")
             return caminho_yaml
             
         except Exception as e:
-            print(f"❌ Erro ao exportar YAML: {e}")
+            print(f"[ERRO] Erro ao exportar YAML: {e}")
             return None
     
     def exportar_csv_metricas(self):
@@ -497,7 +497,7 @@ class AnalisadorMetricasTickets:
                 df_status = pd.DataFrame(status_data)
                 caminho_status = os.path.join(dir_csv, f"status_{periodo_nome}_{timestamp}.csv")
                 df_status.to_csv(caminho_status, index=False, encoding='utf-8')
-                print(f"📊 CSV Status: {caminho_status}")
+                print(f"[METRICAS] CSV Status: {caminho_status}")
             
             # CSV de Entidades
             if 'metricas_gerais' in self.metricas_estruturadas and 'top_entidades' in self.metricas_estruturadas['metricas_gerais']:
@@ -512,7 +512,7 @@ class AnalisadorMetricasTickets:
                 df_entidades = pd.DataFrame(entidades_data)
                 caminho_entidades = os.path.join(dir_csv, f"entidades_{periodo_nome}_{timestamp}.csv")
                 df_entidades.to_csv(caminho_entidades, index=False, encoding='utf-8')
-                print(f"📊 CSV Entidades: {caminho_entidades}")
+                print(f"[METRICAS] CSV Entidades: {caminho_entidades}")
             
             # CSV de Técnicos
             if 'metricas_performance' in self.metricas_estruturadas and 'top_tecnicos' in self.metricas_estruturadas['metricas_performance']:
@@ -527,17 +527,17 @@ class AnalisadorMetricasTickets:
                 df_tecnicos = pd.DataFrame(tecnicos_data)
                 caminho_tecnicos = os.path.join(dir_csv, f"tecnicos_{periodo_nome}_{timestamp}.csv")
                 df_tecnicos.to_csv(caminho_tecnicos, index=False, encoding='utf-8')
-                print(f"📊 CSV Técnicos: {caminho_tecnicos}")
+                print(f"[METRICAS] CSV Técnicos: {caminho_tecnicos}")
             
             return True
             
         except Exception as e:
-            print(f"❌ Erro ao exportar CSVs de métricas: {e}")
+            print(f"[ERRO] Erro ao exportar CSVs de métricas: {e}")
             return False
     
     def exportar_formatos_estruturados(self):
         """Exporta métricas em todos os formatos estruturados"""
-        print(f"\n💾 EXPORTAÇÃO DE FORMATOS ESTRUTURADOS:")
+        print(f"\n[EMOJI] EXPORTAÇÃO DE FORMATOS ESTRUTURADOS:")
         print("-" * 50)
         
         # Coletar métricas estruturadas
@@ -549,11 +549,11 @@ class AnalisadorMetricasTickets:
         yaml_path = self.exportar_yaml()
         csv_success = self.exportar_csv_metricas()
         
-        print(f"\n✅ Exportação concluída!")
+        print(f"\n[OK] Exportação concluída!")
         print(f"🤖 Formatos ideais para IA/Copilot Studio:")
-        print(f"   📄 JSON: Estruturado para APIs e processamento")
-        print(f"   📄 YAML: Legível para humanos e configuração")
-        print(f"   📊 CSV: Tabular para análise e visualização")
+        print(f"   [EMOJI] JSON: Estruturado para APIs e processamento")
+        print(f"   [EMOJI] YAML: Legível para humanos e configuração")
+        print(f"   [METRICAS] CSV: Tabular para análise e visualização")
         
         return True
             
@@ -575,16 +575,16 @@ class AnalisadorMetricasTickets:
         self.gerar_metricas_performance()
         
         # Perguntar sobre exportações
-        print(f"\n💾 OPÇÕES DE EXPORTAÇÃO:")
+        print(f"\n[EMOJI] OPÇÕES DE EXPORTAÇÃO:")
         print("-" * 30)
-        print("1️⃣ Relatório em texto (.txt)")
-        print("2️⃣ Formatos estruturados (JSON/YAML/CSV)")
-        print("3️⃣ Ambos")
-        print("4️⃣ Nenhum")
+        print("1. Relatório em texto (.txt)")
+        print("2. Formatos estruturados (JSON/YAML/CSV)")
+        print("3. Ambos")
+        print("4. Nenhum")
         
         while True:
             try:
-                opcao = input("🔄 Escolha uma opção (1-4): ").strip()
+                opcao = input("[PROCESSO] Escolha uma opção (1-4): ").strip()
                 
                 if opcao == '1':
                     self.gerar_relatorio_completo()
@@ -599,21 +599,21 @@ class AnalisadorMetricasTickets:
                 elif opcao == '4':
                     break
                 else:
-                    print("❌ Opção inválida. Digite 1, 2, 3 ou 4.")
+                    print("[ERRO] Opção inválida. Digite 1, 2, 3 ou 4.")
                     
             except KeyboardInterrupt:
-                print("\n\n👋 Exportação cancelada pelo usuário.")
+                print("\n\n[EMOJI] Exportação cancelada pelo usuário.")
                 break
             
         print(f"\n" + "=" * 70)
-        print("✅ ANÁLISE CONCLUÍDA COM SUCESSO!")
+        print("[OK] ANÁLISE CONCLUÍDA COM SUCESSO!")
         print("=" * 70)
-        print("📊 Métricas exibidas na tela")
+        print("[METRICAS] Métricas exibidas na tela")
         if opcao in ['1', '3']:
-            print("💾 Relatório detalhado salvo em arquivo")
+            print("[EMOJI] Relatório detalhado salvo em arquivo")
         if opcao in ['2', '3']:
             print("🤖 Formatos estruturados exportados para IA")
-        print("🎉 Obrigado por usar o Analisador de Métricas!")
+        print("[SUCESSO] Obrigado por usar o Analisador de Métricas!")
         
         return True
 
@@ -624,10 +624,10 @@ def main():
         analisador.executar_analise()
         
     except KeyboardInterrupt:
-        print("\n\n👋 Análise cancelada pelo usuário.")
+        print("\n\n[EMOJI] Análise cancelada pelo usuário.")
         sys.exit(0)
     except Exception as e:
-        print(f"\n❌ Erro inesperado: {e}")
+        print(f"\n[ERRO] Erro inesperado: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
