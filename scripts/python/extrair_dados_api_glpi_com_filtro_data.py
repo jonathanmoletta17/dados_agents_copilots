@@ -11,8 +11,33 @@ import html
 import re
 import json
 import argparse
+import sys
+import os
 from datetime import datetime, timedelta
 from collections import defaultdict
+
+# Configurar encoding para Windows
+if os.name == 'nt':  # Windows
+    import locale
+    try:
+        # Tentar configurar UTF-8
+        locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+    except locale.Error:
+        try:
+            # Fallback para configuração padrão do Windows
+            locale.setlocale(locale.LC_ALL, 'Portuguese_Brazil.1252')
+        except locale.Error:
+            pass
+    
+    # Configurar stdout/stderr para UTF-8
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    else:
+        # Para versões mais antigas do Python
+        import codecs
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer)
 
 class GLPIAPIExtractorComFiltroData:
     def __init__(self, api_url, app_token, user_token):
@@ -119,27 +144,41 @@ class GLPIAPIExtractorComFiltroData:
         if not descricao_raw:
             return ""
         
-        descricao = html.unescape(str(descricao_raw))
-        descricao = re.sub(r'<[^>]+>', '', descricao)
-        descricao = re.sub(r'\s+', ' ', descricao)
-        descricao = descricao.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-        
-        if len(descricao) > 500:
-            descricao = descricao[:497] + "..."
-        
-        return descricao.strip()
+        try:
+            descricao = html.unescape(str(descricao_raw))
+            descricao = re.sub(r'<[^>]+>', '', descricao)
+            descricao = re.sub(r'\s+', ' ', descricao)
+            descricao = descricao.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            
+            # Remover caracteres Unicode problemáticos
+            descricao = re.sub(r'[\u200b-\u200f\u2028-\u202f\u205f-\u206f]', '', descricao)
+            
+            if len(descricao) > 500:
+                descricao = descricao[:497] + "..."
+            
+            return descricao.strip()
+        except Exception as e:
+            print(f"   [AVISO] Erro ao limpar descrição: {e}")
+            return ""
     
     def limpar_campo_texto(self, texto):
         """Limpa campos de texto"""
         if not texto:
             return ""
         
-        texto = str(texto)
-        texto = texto.replace('\r', '').replace('\n', ' ').replace('\t', ' ')
-        texto = texto.replace('"', '""')
-        texto = re.sub(r'\s+', ' ', texto)
-        
-        return texto.strip()
+        try:
+            texto = str(texto)
+            texto = texto.replace('\r', '').replace('\n', ' ').replace('\t', ' ')
+            texto = texto.replace('"', '""')
+            texto = re.sub(r'\s+', ' ', texto)
+            
+            # Remover caracteres Unicode problemáticos
+            texto = re.sub(r'[\u200b-\u200f\u2028-\u202f\u205f-\u206f]', '', texto)
+            
+            return texto.strip()
+        except Exception as e:
+            print(f"   [AVISO] Erro ao limpar campo de texto: {e}")
+            return ""
     
     def formatar_data(self, data_str):
         """Formata data para o padrão brasileiro"""

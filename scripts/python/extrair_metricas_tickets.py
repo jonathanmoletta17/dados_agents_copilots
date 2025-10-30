@@ -42,15 +42,25 @@ class AnalisadorMetricasTickets:
         
     def obter_arquivo_fixo(self):
         """Retorna o caminho do arquivo CSV mais recente para análise"""
-        # Diretório onde estão os arquivos completos
-        diretorio_completos = r"c:\Users\jonathan-moletta\OneDrive - Governo do Estado do Rio Grande do Sul\Área de Trabalho\BD_cau_sis\bd_cau\scripts\dados\tickets_completos"
+        # Primeiro tenta buscar na pasta tickets_6_meses (dados filtrados)
+        diretorio_6_meses = r"c:\Users\jonathan-moletta\OneDrive - Governo do Estado do Rio Grande do Sul\Área de Trabalho\BD_cau_sis\bd_cau\scripts\dados\tickets_6_meses"
+        padrao_6_meses = os.path.join(diretorio_6_meses, "tickets_api_glpi_ultimos_6_meses_*.csv")
+        arquivos_6_meses = glob.glob(padrao_6_meses)
         
-        # Buscar todos os arquivos CSV que seguem o padrão
-        padrao_arquivo = os.path.join(diretorio_completos, "tickets_api_glpi_completo_*.csv")
-        arquivos_encontrados = glob.glob(padrao_arquivo)
+        if arquivos_6_meses:
+            arquivos_encontrados = arquivos_6_meses
+            print(f"[INFO] Usando dados filtrados dos últimos 6 meses")
+        else:
+            # Se não encontrar, busca na pasta tickets_completos (dados completos)
+            diretorio_completos = r"c:\Users\jonathan-moletta\OneDrive - Governo do Estado do Rio Grande do Sul\Área de Trabalho\BD_cau_sis\bd_cau\scripts\dados\tickets_completos"
+            padrao_completos = os.path.join(diretorio_completos, "tickets_api_glpi_completo_*.csv")
+            arquivos_encontrados = glob.glob(padrao_completos)
+            
+            if arquivos_encontrados:
+                print(f"[INFO] Usando dados completos (não filtrados)")
         
         if not arquivos_encontrados:
-            raise FileNotFoundError(f"Nenhum arquivo encontrado no padrão: {padrao_arquivo}")
+            raise FileNotFoundError(f"Nenhum arquivo encontrado nos padrões:\n  - {padrao_6_meses}\n  - {padrao_completos if 'padrao_completos' in locals() else 'N/A'}")
         
         # Pegar o arquivo mais recente (último modificado)
         arquivo_mais_recente = max(arquivos_encontrados, key=os.path.getmtime)

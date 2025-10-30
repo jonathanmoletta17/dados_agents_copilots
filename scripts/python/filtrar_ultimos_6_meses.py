@@ -190,13 +190,46 @@ def main():
         print(f"[CONFIG] Diretório de saída: {diretorio_saida}")
         print()
         
-        # Encontrar arquivo mais recente
-        print("[ETAPA 1] Localizando arquivo mais recente...")
+        # Verificar se já existe arquivo na pasta de destino (pode ter sido gerado diretamente)
+        print("[ETAPA 1] Verificando arquivos existentes...")
+        
+        # Primeiro, verificar se já existe arquivo na pasta de destino
+        arquivos_destino = glob.glob(os.path.join(diretorio_saida, "*.csv"))
+        
+        if arquivos_destino:
+            # Se já existe arquivo na pasta de destino, usar o mais recente
+            arquivo_mais_recente_destino = max(arquivos_destino, key=os.path.getmtime)
+            print(f"[OK] Arquivo já existe na pasta de destino: {os.path.basename(arquivo_mais_recente_destino)}")
+            print(f"[INFO] Não é necessário filtrar - arquivo já está no período correto")
+            print(f"[CAMINHO] {arquivo_mais_recente_destino}")
+            
+            # Relatório final
+            fim = datetime.now()
+            duracao = fim - inicio
+            
+            print()
+            print("=" * 80)
+            print("[SUCESSO] ARQUIVO JÁ DISPONÍVEL!")
+            print("=" * 80)
+            print("[RESUMO] Arquivo já existe na pasta de destino:")
+            print(f"   [OK] Arquivo encontrado: {os.path.basename(arquivo_mais_recente_destino)}")
+            print(f"   [OK] Localização: tickets_6_meses")
+            print(f"   [INFO] Não foi necessário filtrar dados")
+            print()
+            print(f"[TEMPO] Duração total: {duracao}")
+            print(f"[CONCLUSAO] Concluído em: {fim.strftime('%d/%m/%Y %H:%M:%S')}")
+            print("=" * 80)
+            
+            return True
+        
+        # Se não existe arquivo na pasta de destino, procurar na pasta de entrada
+        print("[INFO] Nenhum arquivo encontrado na pasta de destino")
+        print("[ETAPA 2] Localizando arquivo na pasta de entrada...")
         arquivo_entrada = encontrar_arquivo_mais_recente(diretorio_entrada)
         print()
         
         # Filtrar dados
-        print("[ETAPA 2] Filtrando dados...")
+        print("[ETAPA 3] Filtrando dados...")
         arquivo_saida = filtrar_dados_6_meses(arquivo_entrada, diretorio_saida)
         print()
         
