@@ -163,14 +163,50 @@ class PipelineGLPI:
             # Executar script
             inicio = datetime.now()
             
-            resultado = subprocess.run(
-                [sys.executable, caminho_script],
-                cwd=script_dir,
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace'
-            )
+            # Preparar comando com argumentos específicos para cada script
+            comando = [sys.executable, caminho_script]
+            
+            # Adicionar argumentos específicos para cada script
+            if arquivo == 'extrair_dados_api_glpi_com_filtro_data.py':
+                # Executar primeiro extração completa, depois últimos 6 meses
+                # Extração completa
+                comando_completo = comando + ['--periodo', 'todos']
+                resultado_completo = subprocess.run(
+                    comando_completo,
+                    cwd=script_dir,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace'
+                )
+                
+                if resultado_completo.returncode != 0:
+                    print(f"\n[ERRO] Falha na extração completa!")
+                    if resultado_completo.stderr:
+                        print(f"[ERRO] {resultado_completo.stderr}")
+                    return False
+                
+                print("[OK] Extração completa concluída!")
+                
+                # Executar extração dos últimos 6 meses
+                comando_6_meses = comando + ['--periodo', 'ultimos_6_meses']
+                resultado = subprocess.run(
+                    comando_6_meses,
+                    cwd=script_dir,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace'
+                )
+            else:
+                resultado = subprocess.run(
+                    comando,
+                    cwd=script_dir,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8',
+                    errors='replace'
+                )
             
             fim = datetime.now()
             duracao = fim - inicio

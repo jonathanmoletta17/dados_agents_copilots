@@ -8,6 +8,7 @@
 scripts/dados/tickets_mensais/*.csv
 scripts/dados/tickets_ultimo_mes/*.csv
 scripts/dados/tickets_6_meses/*.csv
+scripts/dados/tickets_completos/*.csv
 scripts/dados/tickets_ano_atual/*.csv
 
 # Relatórios gerados com dados reais

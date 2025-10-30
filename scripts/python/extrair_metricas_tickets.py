@@ -585,7 +585,8 @@ class AnalisadorMetricasTickets:
                 dias_semana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
                 tickets_por_dia = self.df['Data_abertura'].dt.dayofweek.value_counts().sort_index()
                 self.metricas_estruturadas['metricas_temporais']['tickets_por_dia_semana'] = {
-                    dias_semana[dia]: int(count) for dia, count in tickets_por_dia.items()
+                    dias_semana[int(dia)]: int(count) for dia, count in tickets_por_dia.items() 
+                    if pd.notna(dia) and 0 <= int(dia) <= 6
                 }
             
             # Métricas de performance

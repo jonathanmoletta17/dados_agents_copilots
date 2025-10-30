@@ -129,6 +129,10 @@ class GLPIAPIExtractorComFiltroData:
             data_inicial = datetime(ano_passado, 1, 1)
             data_final = datetime(ano_passado, 12, 31, 23, 59, 59)
             descricao = f"Ano passado ({ano_passado})"
+        elif periodo == "todos":
+            data_inicial = None
+            data_final = None
+            descricao = "Todos os tickets (sem filtro)"
         else:
             # Padrão: últimos 6 meses
             data_inicial = hoje - timedelta(days=180)
@@ -325,8 +329,11 @@ class GLPIAPIExtractorComFiltroData:
         print("[OK] Todos os caches carregados!")
     
     def buscar_tickets_com_filtro_data(self, data_inicial, data_final):
-        """Busca todos os tickets e filtra por data durante o processamento"""
-        print(f"[EMOJI] Buscando todos os tickets para filtrar entre {data_inicial.strftime('%d/%m/%Y')} e {data_final.strftime('%d/%m/%Y')}...")
+        """Busca todos os tickets e filtra por data durante o processamento (se datas fornecidas)"""
+        if data_inicial is None or data_final is None:
+            print(f"[EMOJI] Buscando TODOS os tickets (sem filtro de data)...")
+        else:
+            print(f"[EMOJI] Buscando todos os tickets para filtrar entre {data_inicial.strftime('%d/%m/%Y')} e {data_final.strftime('%d/%m/%Y')}...")
         
         todos_tickets = []
         range_start = 0
@@ -349,23 +356,27 @@ class GLPIAPIExtractorComFiltroData:
                 if not tickets:
                     break
                 
-                # Filtrar tickets por data durante o processamento
-                tickets_filtrados = []
-                for ticket in tickets:
-                    data_criacao_str = ticket.get('date')
-                    if data_criacao_str:
-                        try:
-                            # Converter data de criação para datetime
-                            data_criacao = datetime.strptime(data_criacao_str, '%Y-%m-%d %H:%M:%S')
-                            
-                            # Verificar se está no período
-                            if data_inicial <= data_criacao <= data_final:
+                # Se não há filtro de data, incluir todos os tickets
+                if data_inicial is None or data_final is None:
+                    todos_tickets.extend(tickets)
+                else:
+                    # Filtrar tickets por data durante o processamento
+                    tickets_filtrados = []
+                    for ticket in tickets:
+                        data_criacao_str = ticket.get('date')
+                        if data_criacao_str:
+                            try:
+                                # Converter data de criação para datetime
+                                data_criacao = datetime.strptime(data_criacao_str, '%Y-%m-%d %H:%M:%S')
+                                
+                                # Verificar se está no período
+                                if data_inicial <= data_criacao <= data_final:
+                                    tickets_filtrados.append(ticket)
+                            except ValueError:
+                                # Se não conseguir converter a data, incluir o ticket
                                 tickets_filtrados.append(ticket)
-                        except ValueError:
-                            # Se não conseguir converter a data, incluir o ticket
-                            tickets_filtrados.append(ticket)
-                
-                todos_tickets.extend(tickets_filtrados)
+                    
+                    todos_tickets.extend(tickets_filtrados)
                 
                 if len(tickets) < range_limit:
                     break
@@ -452,8 +463,11 @@ class GLPIAPIExtractorComFiltroData:
                 data_inicial, data_final, descricao_periodo = self.calcular_periodo_predefinido("ultimos_6_meses")
                 print(f"[DATA] Período padrão: {descricao_periodo}")
             
-            print(f"[EMOJI] Data inicial: {data_inicial.strftime('%d/%m/%Y %H:%M:%S')}")
-            print(f"[EMOJI] Data final: {data_final.strftime('%d/%m/%Y %H:%M:%S')}")
+            if data_inicial and data_final:
+                print(f"[EMOJI] Data inicial: {data_inicial.strftime('%d/%m/%Y %H:%M:%S')}")
+                print(f"[EMOJI] Data final: {data_final.strftime('%d/%m/%Y %H:%M:%S')}")
+            else:
+                print(f"[EMOJI] Extraindo TODOS os tickets (sem filtro de data)")
             print()
             
             # Carregar caches primeiro
@@ -515,13 +529,17 @@ class GLPIAPIExtractorComFiltroData:
             # Gerar arquivo CSV
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             periodo_nome = periodo_predefinido if periodo_predefinido else "personalizado"
-            nome_arquivo = f"tickets_api_glpi_{periodo_nome}_{timestamp}.csv"
+            # Usar 'completo' no nome do arquivo quando for 'todos'
+            nome_periodo = "completo" if periodo_predefinido == "todos" else periodo_nome
+            nome_arquivo = f"tickets_api_glpi_{nome_periodo}_{timestamp}.csv"
             
             # Determinar pasta de destino baseada no tipo de execução
             if periodo_predefinido == "ultimos_6_meses":
                 pasta_destino = "../dados/tickets_6_meses"
             elif periodo_predefinido == "ultimo_mes":
                 pasta_destino = "../dados/tickets_ultimo_mes"
+            elif periodo_predefinido == "todos":
+                pasta_destino = "../dados/tickets_completos"
             elif periodo_nome == "personalizado":
                 pasta_destino = "../dados/tickets_data_personalizada"
             else:
@@ -572,7 +590,7 @@ def main():
     # Opções de período pré-definido
     parser.add_argument('--periodo', choices=[
         'ultimo_mes', 'ultimos_3_meses', 'ultimos_6_meses', 
-        'ultimo_ano', 'ano_atual', 'ano_passado'
+        'ultimo_ano', 'ano_atual', 'ano_passado', 'todos'
     ], help='Período pré-definido para extração')
     
     # Opções de data personalizada
@@ -630,10 +648,11 @@ def main():
         print("5. Ano atual")
         print("6. Ano passado")
         print("7. Período personalizado")
+        print("8. Todos os tickets (sem filtro)")
         print()
         
         try:
-            opcao = input("Escolha uma opção (1-7) [3]: ").strip()
+            opcao = input("Escolha uma opção (1-8) [3]: ").strip()
             if not opcao:
                 opcao = "3"
             
@@ -657,6 +676,8 @@ def main():
                 data_final = datetime.strptime(data_final_str, '%d/%m/%Y')
                 data_final = data_final.replace(hour=23, minute=59, second=59)
                 periodo_predefinido = None
+            elif opcao == "8":
+                periodo_predefinido = "todos"
             else:
                 print("Opção inválida! Usando padrão (últimos 6 meses)")
                 periodo_predefinido = "ultimos_6_meses"
