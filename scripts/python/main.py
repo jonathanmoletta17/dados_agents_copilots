@@ -1,326 +1,387 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PIPELINE DE ANÁLISE GLPI - SCRIPT PRINCIPAL
-==========================================
+Pipeline Principal de Extração e Análise de Dados GLPI
+======================================================
 
-Script principal que coordena todo o pipeline de análise de tickets do GLPI.
-Executa sequencialmente os três estágios principais:
+Este script orquestra a execução sequencial dos módulos de extração de dados
+e análise de métricas do sistema GLPI, garantindo a ordem correta de execução
+e validação dos dados em cada etapa.
 
-1. Extração de dados da API GLPI
-2. Filtro dos dados (últimos 6 meses)
-3. Geração de métricas e relatórios
+Fluxo de Execução:
+1. Extração de todos os tickets (extrair_todos_tickets.py)
+2. Verificação da integridade dos dados brutos gerados
+3. Extração e análise de métricas (extrair_metricas_tickets_otimizado.py)
+4. Validação final dos resultados
 
-Este script:
-- Verifica a existência de todos os scripts necessários
-- Valida dependências Python
-- Executa cada etapa em sequência
-- Monitora o progresso e trata erros
-- Fornece relatório final do pipeline
-
-Funcionalidades:
-- Verificação automática de dependências
-- Execução sequencial com tratamento de erros
-- Logs detalhados de cada etapa
-- Relatório final de execução
-- Interrupção segura em caso de falha
-
-Autor: Sistema Automatizado
-Data: 2025-10-29
-Versão: 3.0
+Autor: Sistema de Análise GLPI
+Data: 2024
 """
 
-import subprocess
-import sys
 import os
+import sys
+import logging
+import subprocess
+import time
 from datetime import datetime
+from pathlib import Path
+from typing import Tuple, Optional, Dict, Any
 
-# Configurar encoding para Windows
-if sys.platform.startswith('win'):
-    import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
-    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
 
-class PipelineGLPI:
+class PipelineOrchestrator:
     """
-    Classe principal para coordenar o pipeline de análise GLPI.
+    Orquestrador principal do pipeline de extração e análise de dados GLPI.
     
-    Esta classe gerencia a execução sequencial de todos os scripts
-    necessários para extrair, filtrar e analisar dados do GLPI.
-    
-    Attributes:
-        scripts (list): Lista de scripts a serem executados
-        dependencias (list): Lista de dependências Python necessárias
+    Responsável por coordenar a execução sequencial dos scripts de extração
+    de dados e análise de métricas, garantindo a integridade e ordem correta
+    das operações.
     """
     
     def __init__(self):
+        """Inicializa o orquestrador do pipeline."""
+        self.setup_logging()
+        self.script_dir = Path(__file__).parent
+        self.dados_dir = self.script_dir.parent / "dados"
+        self.logger = logging.getLogger(__name__)
+        
+        # Caminhos dos scripts
+        self.script_extracao = self.script_dir / "extrair_todos_tickets.py"
+        self.script_metricas = self.script_dir / "extrair_metricas_tickets_otimizado.py"
+        
+        # Diretórios de dados esperados
+        self.dir_tickets_completos = self.dados_dir / "tickets_completos"
+        self.dir_tickets_6_meses = self.dados_dir / "tickets_6_meses"
+        self.dir_metricas_csv = self.dados_dir / "metricas_csv"
+        
+        self.logger.info("=" * 80)
+        self.logger.info("INICIANDO PIPELINE DE EXTRAÇÃO E ANÁLISE DE DADOS GLPI")
+        self.logger.info("=" * 80)
+        
+    def setup_logging(self) -> None:
+        """Configura o sistema de logging do pipeline."""
+        # Configuração do formato de log
+        log_format = '%(asctime)s - %(levelname)s - %(message)s'
+        date_format = '%Y-%m-%d %H:%M:%S'
+        
+        # Configuração do logger principal
+        logging.basicConfig(
+            level=logging.INFO,
+            format=log_format,
+            datefmt=date_format,
+            handlers=[
+                logging.StreamHandler(sys.stdout),
+                logging.FileHandler(
+                    filename='pipeline_execution.log',
+                    mode='a',
+                    encoding='utf-8'
+                )
+            ]
+        )
+        
+    def verificar_prerequisitos(self) -> bool:
         """
-        Inicializa o pipeline com configurações dos scripts e dependências.
+        Verifica se todos os pré-requisitos para execução estão atendidos.
+        
+        Returns:
+            bool: True se todos os pré-requisitos estão atendidos, False caso contrário
         """
-        # Definir scripts do pipeline
-        self.scripts = [
-            {
-                'numero': 1,
-                'nome': 'Extração de Dados',
-                'arquivo': 'extrair_dados_api_glpi_com_filtro_data.py',
-                'descricao': 'Extrai tickets da API GLPI com filtro de data'
-            },
-            {
-                'numero': 2,
-                'nome': 'Filtro de Dados',
-                'arquivo': 'filtrar_ultimos_6_meses.py',
-                'descricao': 'Filtra dados para os últimos 6 meses'
-            },
-            {
-                'numero': 3,
-                'nome': 'Geração de Métricas',
-                'arquivo': 'extrair_metricas_tickets.py',
-                'descricao': 'Gera métricas e relatórios detalhados'
-            }
+        self.logger.info("ETAPA 1: Verificando pré-requisitos do sistema...")
+        
+        # Verificar se os scripts existem
+        scripts_necessarios = [
+            (self.script_extracao, "Script de extração de tickets"),
+            (self.script_metricas, "Script de análise de métricas")
         ]
         
-        # Dependências necessárias
-        self.dependencias = ['pandas', 'requests']
-
-    def verificar_scripts(self):
+        for script_path, descricao in scripts_necessarios:
+            if not script_path.exists():
+                self.logger.error(f"[ERRO] {descricao} não encontrado: {script_path}")
+                return False
+            self.logger.info(f"[OK] {descricao} encontrado: {script_path}")
+        
+        # Criar diretórios necessários se não existirem
+        self.dados_dir.mkdir(exist_ok=True)
+        self.logger.info(f"[OK] Diretório de dados verificado: {self.dados_dir}")
+        
+        self.logger.info("[OK] Todos os pré-requisitos verificados com sucesso")
+        return True
+        
+    def executar_script(self, script_path: Path, descricao: str, timeout: int = 3600) -> Tuple[bool, str]:
         """
-        Verifica se todos os scripts necessários existem.
-        
-        Returns:
-            bool: True se todos os scripts existem, False caso contrário
-        """
-        print("[VERIFICACAO] Verificando existência dos scripts...")
-        
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        scripts_faltando = []
-        
-        for script in self.scripts:
-            caminho_script = os.path.join(script_dir, script['arquivo'])
-            if not os.path.exists(caminho_script):
-                print(f"[ERRO] Script não encontrado: {script['arquivo']}")
-                scripts_faltando.append(script['arquivo'])
-            else:
-                print(f"[OK] {script['arquivo']} - OK")
-        
-        if not scripts_faltando:
-            print("[OK] Todos os scripts foram encontrados!\n")
-            return True
-        else:
-            return False
-
-    def verificar_dependencias(self):
-        """
-        Verifica se todas as dependências Python estão instaladas.
-        
-        Returns:
-            bool: True se todas as dependências estão disponíveis, False caso contrário
-        """
-        print("[VERIFICACAO] Verificando dependências Python...")
-        
-        dependencias_faltando = []
-        
-        for dep in self.dependencias:
-            try:
-                __import__(dep)
-                print(f"[OK] {dep} - OK")
-            except ImportError:
-                print(f"[ERRO] {dep} não está instalado!")
-                dependencias_faltando.append(dep)
-        
-        if not dependencias_faltando:
-            print("[OK] Todas as dependências estão disponíveis!\n")
-            return True
-        else:
-            return False
-
-    def executar_script(self, script_info):
-        """
-        Executa um script individual do pipeline.
+        Executa um script Python e monitora sua execução.
         
         Args:
-            script_info (dict): Informações do script a ser executado
+            script_path: Caminho para o script a ser executado
+            descricao: Descrição do script para logs
+            timeout: Timeout em segundos para execução (padrão: 1 hora)
             
         Returns:
-            bool: True se execução bem-sucedida, False caso contrário
+            Tuple[bool, str]: (sucesso, mensagem_de_saida)
         """
-        numero_etapa = script_info['numero']
-        nome = script_info['nome']
-        arquivo = script_info['arquivo']
-        descricao = script_info['descricao']
+        self.logger.info(f"Iniciando execução: {descricao}")
+        self.logger.info(f"Script: {script_path}")
         
-        print("=" * 80)
-        print(f"[ETAPA {numero_etapa}] {nome.upper()}")
-        print("=" * 80)
-        print(f"[INFO] {descricao}")
-        print(f"[SCRIPT] {arquivo}")
-        print()
+        inicio = time.time()
         
         try:
-            # Obter diretório do script
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            caminho_script = os.path.join(script_dir, arquivo)
+            # Executar o script usando subprocess
+            resultado = subprocess.run(
+                [sys.executable, str(script_path)],
+                cwd=str(self.script_dir),
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                encoding='utf-8',
+                errors='replace'
+            )
             
-            # Executar script
-            inicio = datetime.now()
-            
-            # Preparar comando com argumentos específicos para cada script
-            comando = [sys.executable, caminho_script]
-            
-            # Adicionar argumentos específicos para cada script
-            if arquivo == 'extrair_dados_api_glpi_com_filtro_data.py':
-                # Executar primeiro extração completa, depois últimos 6 meses
-                # Extração completa
-                comando_completo = comando + ['--periodo', 'todos']
-                resultado_completo = subprocess.run(
-                    comando_completo,
-                    cwd=script_dir,
-                    capture_output=True,
-                    text=True,
-                    encoding='utf-8',
-                    errors='replace'
-                )
-                
-                if resultado_completo.returncode != 0:
-                    print(f"\n[ERRO] Falha na extração completa!")
-                    if resultado_completo.stderr:
-                        print(f"[ERRO] {resultado_completo.stderr}")
-                    return False
-                
-                print("[OK] Extração completa concluída!")
-                
-                # Executar extração dos últimos 6 meses
-                comando_6_meses = comando + ['--periodo', 'ultimos_6_meses']
-                resultado = subprocess.run(
-                    comando_6_meses,
-                    cwd=script_dir,
-                    capture_output=True,
-                    text=True,
-                    encoding='utf-8',
-                    errors='replace'
-                )
-            else:
-                resultado = subprocess.run(
-                    comando,
-                    cwd=script_dir,
-                    capture_output=True,
-                    text=True,
-                    encoding='utf-8',
-                    errors='replace'
-                )
-            
-            fim = datetime.now()
+            fim = time.time()
             duracao = fim - inicio
             
-            # Verificar resultado
             if resultado.returncode == 0:
-                print(f"\n[SUCESSO] Etapa {numero_etapa} concluída com sucesso!")
-                print(f"[TEMPO] Duração: {duracao}")
-                
-                # Mostrar saída se houver
-                if resultado.stdout.strip():
-                    print(f"[SAIDA] {resultado.stdout.strip()}")
-                
-                return True
-            else:
-                print(f"\n[ERRO] ERRO na execução do script!")
-                print(f"[CODIGO] Código de saída: {resultado.returncode}")
-                print(f"[TEMPO] Duração: {duracao}")
-                
-                if resultado.stderr:
-                    print(f"[ERRO] {resultado.stderr}")
+                self.logger.info(f"[OK] {descricao} executado com sucesso")
+                self.logger.info(f"[OK] Tempo de execução: {duracao:.2f} segundos")
                 if resultado.stdout:
-                    print(f"[SAIDA] {resultado.stdout}")
+                    self.logger.info(f"Saída do script:\n{resultado.stdout}")
+                return True, resultado.stdout
+            else:
+                self.logger.error(f"[ERRO] {descricao} falhou com código: {resultado.returncode}")
+                if resultado.stderr:
+                    self.logger.error(f"Erro detalhado:\n{resultado.stderr}")
+                if resultado.stdout:
+                    self.logger.error(f"Saída do script:\n{resultado.stdout}")
+                return False, resultado.stderr
                 
-                return False
-                
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"[ERRO] {descricao} excedeu o timeout de {timeout} segundos")
+            return False, f"Timeout após {timeout} segundos"
+            
         except Exception as e:
-            print(f"\n[ERRO] Erro inesperado ao executar {script_info['arquivo']}: {e}")
-            return False
-
-    def executar_pipeline(self):
+            self.logger.error(f"[ERRO] Erro inesperado ao executar {descricao}: {str(e)}")
+            return False, str(e)
+    
+    def verificar_dados_brutos(self) -> bool:
         """
-        Executa todo o pipeline de análise.
+        Verifica se os dados brutos foram gerados corretamente após a extração.
         
         Returns:
-            bool: True se pipeline executado com sucesso, False caso contrário
+            bool: True se os dados foram gerados corretamente, False caso contrário
         """
-        inicio_pipeline = datetime.now()
+        self.logger.info("ETAPA 3: Verificando integridade dos dados brutos gerados...")
         
-        print("=" * 80)
-        print("[INICIO] INICIANDO PIPELINE DE ANÁLISE GLPI")
-        print("=" * 80)
-        print("[INFO] Este processo irá:")
-        print("   1. Extrair dados da API GLPI")
-        print("   2. Filtrar dados dos últimos 6 meses")
-        print("   3. Gerar métricas e relatórios")
-        print()
+        # Verificar se os diretórios foram criados
+        diretorios_esperados = [
+            (self.dir_tickets_completos, "Tickets completos"),
+            (self.dir_tickets_6_meses, "Tickets dos últimos 6 meses")
+        ]
         
-        # Executar cada script em sequência
-        for i, script in enumerate(self.scripts, 1):
-            sucesso = self.executar_script(script)
+        for diretorio, descricao in diretorios_esperados:
+            if not diretorio.exists():
+                self.logger.error(f"[ERRO] Diretório não encontrado: {descricao} ({diretorio})")
+                return False
             
-            if not sucesso:
-                print(f"\n[ERRO] Pipeline interrompido na etapa {i}")
+            # Verificar se há arquivos no diretório
+            arquivos = list(diretorio.glob("*.csv"))
+            if not arquivos:
+                self.logger.error(f"[ERRO] Nenhum arquivo CSV encontrado em: {descricao}")
+                return False
+            
+            # Verificar se os arquivos não estão vazios
+            total_registros = 0
+            for arquivo in arquivos:
+                try:
+                    with open(arquivo, 'r', encoding='utf-8') as f:
+                        linhas = sum(1 for _ in f) - 1  # Subtrair cabeçalho
+                        total_registros += linhas
+                except Exception as e:
+                    self.logger.error(f"[ERRO] Erro ao ler arquivo {arquivo}: {str(e)}")
+                    return False
+            
+            self.logger.info(f"[OK] {descricao}: {len(arquivos)} arquivos, {total_registros} registros")
+        
+        self.logger.info("[OK] Verificação dos dados brutos concluída com sucesso")
+        return True
+    
+    def verificar_metricas_geradas(self) -> bool:
+        """
+        Verifica se as métricas foram geradas corretamente.
+        
+        Returns:
+            bool: True se as métricas foram geradas corretamente, False caso contrário
+        """
+        self.logger.info("ETAPA 5: Verificando métricas geradas...")
+        
+        if not self.dir_metricas_csv.exists():
+            self.logger.error(f"[ERRO] Diretório de métricas não encontrado: {self.dir_metricas_csv}")
+            return False
+        
+        # Verificar arquivos de métricas esperados
+        arquivos_metricas = list(self.dir_metricas_csv.glob("*.csv"))
+        if not arquivos_metricas:
+            self.logger.error("[ERRO] Nenhum arquivo de métrica encontrado")
+            return False
+        
+        total_metricas = 0
+        for arquivo in arquivos_metricas:
+            try:
+                with open(arquivo, 'r', encoding='utf-8') as f:
+                    linhas = sum(1 for _ in f) - 1  # Subtrair cabeçalho
+                    total_metricas += linhas
+            except Exception as e:
+                self.logger.error(f"[ERRO] Erro ao ler arquivo de métrica {arquivo}: {str(e)}")
                 return False
         
-        # Pipeline concluído com sucesso
-        fim_pipeline = datetime.now()
-        duracao_total = fim_pipeline - inicio_pipeline
-        
-        print("\n" + "=" * 80)
-        print("[SUCESSO] PIPELINE CONCLUÍDO COM SUCESSO!")
-        print("=" * 80)
-        print("[RESUMO] Todas as etapas foram executadas com sucesso:")
-        print("   [OK] Dados extraídos da API GLPI")
-        print("   [OK] Dados filtrados (últimos 6 meses)")
-        print("   [OK] Métricas e relatórios gerados")
-        print()
-        print(f"[TEMPO] Duração total: {duracao_total}")
-        print(f"[CONCLUSAO] Concluído em: {fim_pipeline.strftime('%d/%m/%Y %H:%M:%S')}")
-        print("=" * 80)
-        
+        self.logger.info(f"[OK] Métricas geradas: {len(arquivos_metricas)} arquivos, {total_metricas} registros")
         return True
+    
+    def executar_pipeline(self) -> bool:
+        """
+        Executa o pipeline completo de extração e análise de dados.
+        
+        Returns:
+            bool: True se todo o pipeline foi executado com sucesso, False caso contrário
+        """
+        inicio_pipeline = time.time()
+        
+        try:
+            # ETAPA 1: Verificar pré-requisitos
+            if not self.verificar_prerequisitos():
+                self.logger.error("[ERRO] Pré-requisitos não atendidos. Abortando execução.")
+                return False
+            
+            # ETAPA 2: Executar extração de todos os tickets
+            self.logger.info("ETAPA 2: Executando extração de todos os tickets...")
+            sucesso_extracao, saida_extracao = self.executar_script(
+                self.script_extracao,
+                "Extração de todos os tickets",
+                timeout=7200  # 2 horas para extração
+            )
+            
+            if not sucesso_extracao:
+                self.logger.error("[ERRO] Falha na extração de tickets. Abortando pipeline.")
+                return False
+            
+            # ETAPA 3: Verificar dados brutos gerados
+            if not self.verificar_dados_brutos():
+                self.logger.error("[ERRO] Dados brutos não foram gerados corretamente. Abortando pipeline.")
+                return False
+            
+            # ETAPA 4: Executar análise de métricas
+            self.logger.info("ETAPA 4: Executando análise de métricas...")
+            sucesso_metricas, saida_metricas = self.executar_script(
+                self.script_metricas,
+                "Análise de métricas de tickets",
+                timeout=3600  # 1 hora para análise
+            )
+            
+            if not sucesso_metricas:
+                self.logger.error("[ERRO] Falha na análise de métricas. Pipeline parcialmente concluído.")
+                return False
+            
+            # ETAPA 5: Verificar métricas geradas
+            if not self.verificar_metricas_geradas():
+                self.logger.error("[ERRO] Métricas não foram geradas corretamente.")
+                return False
+            
+            # Pipeline concluído com sucesso
+            fim_pipeline = time.time()
+            duracao_total = fim_pipeline - inicio_pipeline
+            
+            self.logger.info("=" * 80)
+            self.logger.info("PIPELINE CONCLUÍDO COM SUCESSO!")
+            self.logger.info("=" * 80)
+            self.logger.info(f"Tempo total de execução: {duracao_total:.2f} segundos")
+            self.logger.info(f"Data/hora de conclusão: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"[ERRO] Erro inesperado durante execução do pipeline: {str(e)}")
+            return False
+    
+    def gerar_relatorio_execucao(self) -> Dict[str, Any]:
+        """
+        Gera um relatório detalhado da execução do pipeline.
+        
+        Returns:
+            Dict[str, Any]: Relatório com estatísticas da execução
+        """
+        relatorio = {
+            "timestamp": datetime.now().isoformat(),
+            "diretorios": {
+                "dados": str(self.dados_dir),
+                "tickets_completos": str(self.dir_tickets_completos),
+                "tickets_6_meses": str(self.dir_tickets_6_meses),
+                "metricas_csv": str(self.dir_metricas_csv)
+            },
+            "arquivos_gerados": {}
+        }
+        
+        # Contar arquivos gerados
+        for nome_dir, caminho_dir in [
+            ("tickets_completos", self.dir_tickets_completos),
+            ("tickets_6_meses", self.dir_tickets_6_meses),
+            ("metricas_csv", self.dir_metricas_csv)
+        ]:
+            if caminho_dir.exists():
+                arquivos = list(caminho_dir.glob("*.csv"))
+                relatorio["arquivos_gerados"][nome_dir] = {
+                    "quantidade": len(arquivos),
+                    "arquivos": [arquivo.name for arquivo in arquivos]
+                }
+            else:
+                relatorio["arquivos_gerados"][nome_dir] = {
+                    "quantidade": 0,
+                    "arquivos": []
+                }
+        
+        return relatorio
+
 
 def main():
-    """
-    Função principal do pipeline.
+    """Função principal do pipeline."""
+    print("=" * 80)
+    print("PIPELINE DE EXTRAÇÃO E ANÁLISE DE DADOS GLPI")
+    print("=" * 80)
+    print(f"Iniciado em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print()
     
-    Coordena a verificação de dependências e execução do pipeline completo.
+    # Criar e executar o orquestrador
+    orquestrador = PipelineOrchestrator()
     
-    Returns:
-        bool: True se sucesso, False se erro
-    """
     try:
-        # Inicializar pipeline
-        pipeline = PipelineGLPI()
-        
-        # Verificar dependências
-        if not pipeline.verificar_dependencias():
-            print("[ERRO] Dependências não atendidas. Instale as dependências necessárias.")
-            return False
-        
-        # Verificar scripts
-        if not pipeline.verificar_scripts():
-            print("[ERRO] Scripts necessários não encontrados.")
-            return False
-        
         # Executar pipeline
-        sucesso = pipeline.executar_pipeline()
+        sucesso = orquestrador.executar_pipeline()
         
+        # Gerar relatório
+        relatorio = orquestrador.gerar_relatorio_execucao()
+        
+        # Exibir resultado final
+        print("\n" + "=" * 80)
         if sucesso:
-            return True
+            print("RESULTADO: PIPELINE EXECUTADO COM SUCESSO!")
+            print("=" * 80)
+            print("\nResumo dos arquivos gerados:")
+            for categoria, info in relatorio["arquivos_gerados"].items():
+                print(f"  • {categoria}: {info['quantidade']} arquivos")
         else:
-            print("[ERRO] Pipeline falhou. Verifique os logs acima.")
-            return False
-            
+            print("RESULTADO: PIPELINE FALHOU!")
+            print("=" * 80)
+            print("Verifique os logs acima para detalhes dos erros.")
+        
+        print(f"\nConcluído em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 80)
+        
+        # Retornar código de saída apropriado
+        sys.exit(0 if sucesso else 1)
+        
     except KeyboardInterrupt:
-        print("\n\n[AVISO] Execução cancelada pelo usuário.")
-        return False
+        print("\n[INTERROMPIDO] Pipeline cancelado pelo usuário.")
+        sys.exit(130)
     except Exception as e:
-        print(f"\n[ERRO] Erro inesperado: {e}")
-        return False
+        print(f"\n[ERRO CRÍTICO] Erro inesperado: {str(e)}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    sucesso = main()
-    if not sucesso:
-        sys.exit(1)
+    main()

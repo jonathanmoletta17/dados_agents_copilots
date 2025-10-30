@@ -1,8 +1,23 @@
-# [METRICAS] Sistema de Extração e Análise de Dados GLPI
+# 📊 Sistema de Extração e Análise de Dados GLPI
 
-Sistema completo para extração, análise e visualização de dados de tickets do GLPI via API REST.
+Sistema completo para extração, análise e visualização de dados de tickets do GLPI via API REST, com geração de métricas e relatórios automatizados.
 
-## [INICIO] Início Rápido
+## 📋 Índice
+
+- [🚀 Início Rápido](#-início-rápido)
+- [📁 Estrutura do Projeto](#-estrutura-do-projeto)
+- [🔧 Scripts Principais](#-scripts-principais)
+  - [Extração de Dados](#extração-de-dados)
+  - [Análise de Métricas](#análise-de-métricas)
+  - [Análise de Dados](#análise-de-dados)
+- [⚙️ Configuração](#️-configuração)
+- [📊 Dados e Métricas](#-dados-e-métricas)
+- [🔍 Troubleshooting](#-troubleshooting)
+- [📈 Estatísticas e Performance](#-estatísticas-e-performance)
+
+---
+
+## 🚀 Início Rápido
 
 ### 1. Configuração Inicial
 ```bash
@@ -12,261 +27,371 @@ cd scripts/python
 # Instalar dependências
 pip install -r requirements_api.txt
 
-# Configurar credenciais da API GLPI
-cp config_exemplo.py config.py
-# Editar config.py com suas credenciais reais
+# Executar pipeline completo
+python main.py
 ```
 
-### 2. Configurar Credenciais (OBRIGATÓRIO)
-Edite o arquivo `scripts/python/config.py` com suas credenciais:
-
-```python
-# Configurações da API GLPI
-GLPI_URL = "http://cau.ppiratini.intra.rs.gov.br/glpi/apirest.php"
-APP_TOKEN = "seu_app_token_real"
-USER_TOKEN = "seu_user_token_real"
-
-# Configurações opcionais
-TIMEOUT = 30
-CACHE_ENABLED = True
-DEBUG = False
-```
-
-### 3. Executar o Sistema
+### 2. Extração Rápida de Dados
 ```bash
-# Extração interativa (últimos 6 meses)
-python extrair_dados_api_glpi_com_filtro_data.py
+# Extrair últimos 6 meses (recomendado)
+python extrair_todos_tickets.py
 
-# Análise de métricas
-python extrair_metricas_tickets.py
-
-# API de métricas (acesse http://localhost:5000)
-python api_metricas.py
+# Gerar métricas automaticamente
+python extrair_metricas_tickets_otimizado.py
 ```
 
-## [ARQUIVO] Estrutura do Projeto
+### 3. Verificar Resultados
+```bash
+# Listar arquivos gerados
+ls dados/metricas_csv/
+ls dados/tickets_6_meses/
+ls dados/tickets_completos/
+```
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```
 bd_cau/
-[EMOJI] [EMOJI] README.md                                     # Este arquivo
-[EMOJI] [EMOJI] CONFIGURACAO_INICIAL.md                       # (será removido)
-[EMOJI] [EMOJI] .gitignore                                    # Arquivos protegidos
-[EMOJI] [EMOJI] scripts/
-    [EMOJI] [EMOJI] dados/                                    # Dados extraídos (protegido)
-    [EMOJI]   [EMOJI] metricas_csv/                           # Métricas em CSV
-    [EMOJI]   [EMOJI] relatorios_metricas/                    # Relatórios gerados
-    [EMOJI]   [EMOJI] tickets_6_meses/                        # Dados de tickets
-    [EMOJI] [EMOJI] python/
-        [EMOJI] [EMOJI] extrair_dados_api_glpi_com_filtro_data.py  # Script principal
-        [EMOJI] [EMOJI] extrair_metricas_tickets.py               # Análise de métricas
-        [EMOJI] [EMOJI] api_metricas.py                           # API REST
-        [EMOJI] [CONFIG] config_exemplo.py                         # Template de config
-        [EMOJI] [LISTA] requirements_api.txt                      # Dependências
+├── 📄 README.md                                    # Este arquivo
+├── 🚫 .gitignore                                   # Arquivos protegidos
+└── 📁 scripts/
+    ├── 📁 dados/                                   # Dados extraídos (protegido)
+    │   ├── 📊 metricas_csv/                        # Métricas em CSV
+    │   ├── 📋 tickets_6_meses/                     # Tickets últimos 6 meses
+    │   └── 📋 tickets_completos/                   # Todos os tickets
+    └── 📁 python/
+        ├── 🔄 main.py                              # Pipeline principal
+        ├── 📥 extrair_todos_tickets.py             # Extração de tickets
+        ├── 📊 extrair_metricas_tickets_otimizado.py # Análise de métricas
+        ├── 📋 analisar_dados_csv.py                # Análise estatística
+        ├── 📈 analisar_dados_graficos.py           # Visualizações
+        ├── 🔍 comparar_periodos.py                 # Comparação temporal
+        └── 📦 requirements_api.txt                 # Dependências
 ```
 
-## [CONFIG] Scripts Principais
+---
 
-### [METRICAS] `extrair_dados_api_glpi_com_filtro_data.py`
-**Script principal para extração de dados da API GLPI**
+## 🔧 Scripts Principais
+
+### Extração de Dados
+
+#### 🔄 `main.py` - Pipeline Principal
+**Script orquestrador que executa todo o processo automaticamente**
+
+```bash
+# Execução completa
+python main.py
+```
+
+**Funcionalidades:**
+- ✅ Executa extração de todos os tickets
+- ✅ Gera tickets dos últimos 6 meses
+- ✅ Calcula métricas automaticamente
+- ✅ Logs detalhados de execução
+- ✅ Tratamento de erros UTF-8
+
+#### 📥 `extrair_todos_tickets.py` - Extração de Tickets
+**Extrai dados de tickets do banco local com formatação padronizada**
+
+```bash
+# Extração básica
+python extrair_todos_tickets.py
+```
+
+**Características:**
+- 🔄 Extração de todos os tickets históricos
+- 📅 Geração automática de arquivo dos últimos 6 meses
+- 🧹 Limpeza e formatação de dados
+- 📊 Padronização de campos
+- 🔍 Validação de qualidade
+
+**Dados Extraídos:**
+| Campo | Descrição | Exemplo |
+|-------|-----------|---------|
+| `ID` | Identificador único | 12345 |
+| `Título` | Assunto do ticket | "Problema com impressora" |
+| `Entidade` | Órgão responsável | "CASA CIVIL" |
+| `Status` | Status atual | "Fechado", "Em andamento" |
+| `Data Criação` | Data de abertura | "15/10/2025 14:30:00" |
+| `Requerente` | Usuário solicitante | "João Silva" |
+| `Técnico` | Técnico responsável | "Maria Santos" |
+| `Grupo` | Grupo técnico | "Suporte TI" |
+| `Categoria` | Categoria do ticket | "HARDWARE" |
+| `Localização` | Local físico | "Prédio A - Sala 101" |
+
+### Análise de Métricas
+
+#### 📊 `extrair_metricas_tickets_otimizado.py` - Geração de Métricas
+**Gera métricas detalhadas e relatórios de qualidade dos dados**
+
+```bash
+# Análise completa
+python extrair_metricas_tickets_otimizado.py
+```
+
+**Métricas Geradas:**
+- 📈 **Status**: Distribuição por status dos tickets
+- 🏢 **Entidades**: Tickets por órgão/entidade
+- 👥 **Técnicos**: Produtividade por técnico
+- 🔧 **TTR por Grupo**: Tempo de resolução por grupo técnico
+- 📋 **Relatório de Qualidade**: Validação e integridade dos dados
+
+**Arquivos CSV Gerados:**
+- `status_YYYYMMDD_HHMMSS.csv`
+- `entidades_YYYYMMDD_HHMMSS.csv`
+- `tecnicos_YYYYMMDD_HHMMSS.csv`
+- `ttr_grupo_YYYYMMDD_HHMMSS.csv`
+- `relatorio_qualidade_YYYYMMDD_HHMMSS.csv`
+
+### Análise de Dados
+
+#### 📋 `analisar_dados_csv.py` - Análise Estatística
+**Gera relatórios estatísticos detalhados dos dados dos tickets**
+
+```bash
+# Análise básica
+python analisar_dados_csv.py "caminho/para/arquivo.csv"
+
+# Salvar relatório em JSON
+python analisar_dados_csv.py "caminho/para/arquivo.csv" --salvar-json
+```
+
+**Funcionalidades:**
+- 📊 Contabiliza valores únicos para cada campo
+- 📈 Calcula percentuais e frequências
+- 📅 Análise temporal (tickets por dia da semana)
+- 💾 Exportação para JSON
+
+#### 📈 `analisar_dados_graficos.py` - Visualizações
+**Cria dashboards interativos com gráficos e visualizações**
+
+```bash
+# Gerar dashboard HTML
+python analisar_dados_graficos.py "caminho/para/arquivo.csv" --html
+
+# Salvar gráficos em PNG
+python analisar_dados_graficos.py "caminho/para/arquivo.csv" --png
+```
+
+**Dependências:**
+```bash
+pip install pandas matplotlib seaborn plotly kaleido
+```
 
 **Recursos:**
-- [OK] Extração por período (dias, semanas, meses)
-- [OK] Cache inteligente de usuários (incluindo excluídos)
-- [OK] Correção automática para usuários não encontrados
-- [OK] Exportação para CSV
-- [OK] Suporte a argumentos de linha de comando
+- 🥧 Gráficos de pizza e barras
+- 📈 Análises temporais com gráficos de linha
+- 🔗 Matriz de correlação entre campos
+- 🌐 Dashboard HTML interativo
+- 🖼️ Exportação de gráficos em PNG
 
-**Uso:**
+#### 🔍 `comparar_periodos.py` - Comparação Temporal
+**Compara dados entre diferentes períodos (meses, anos, etc.)**
+
 ```bash
-# Modo interativo
-python extrair_dados_api_glpi_com_filtro_data.py
+# Comparar todos os CSVs de uma pasta
+python comparar_periodos.py --pasta "caminho/para/pasta/dados"
 
-# Com argumentos específicos
-python extrair_dados_api_glpi_com_filtro_data.py --periodo 30 --formato csv
+# Comparar arquivos específicos
+python comparar_periodos.py --arquivos arquivo1.csv arquivo2.csv
 
-# Ver todas as opções
-python extrair_dados_api_glpi_com_filtro_data.py --help
+# Gerar relatório HTML
+python comparar_periodos.py --pasta "caminho/para/pasta" --html
 ```
 
-**Opções de período:**
-- `1` - Últimos 30 dias
-- `2` - Últimos 3 meses  
-- `3` - Últimos 6 meses (padrão)
-- `4` - Último ano
-- `5` - Período personalizado
+**Funcionalidades:**
+- 📊 Comparação de múltiplos arquivos CSV
+- 📈 Análise de evolução temporal
+- 📉 Gráficos comparativos
+- 📋 Relatórios de tendências
+- 🌐 Dashboard comparativo em HTML
 
-### [GRAFICO] `extrair_metricas_tickets.py`
-**Análise completa de métricas e KPIs**
+---
 
-**Métricas geradas:**
-- [METRICAS] Tickets por categoria
-- [EMOJI] Tickets por técnico
-- [EMOJI] Tickets por entidade
-- [EMOJI] Tickets por localização
-- [TEMPO] Tempos de resolução
-- [GRAFICO] Tendências temporais
+## ⚙️ Configuração
 
-**Arquivos gerados:**
-- `metricas_categorias.csv` - Análise por categoria
-- `metricas_tecnicos.csv` - Performance de técnicos
-- `metricas_entidades.csv` - Distribuição por entidade
-- `metricas_localizacoes.csv` - Análise geográfica
-- `metricas_tempos_resolucao.csv` - KPIs de tempo
-
-### [EMOJI] `api_metricas.py`
-**API REST para consulta de métricas em tempo real**
-
-**Endpoints disponíveis:**
-- `GET /` - Página inicial
-- `GET /status` - Status da API
-- `GET /metricas` - Métricas gerais
-- `GET /categorias` - Top categorias
-- `POST /analisar` - Análise completa
-
-**Iniciar servidor:**
+### Dependências
 ```bash
-python api_metricas.py
-# Acesse: http://localhost:5000
+# Dependências básicas
+pip install pandas
+
+# Para gráficos avançados
+pip install matplotlib seaborn plotly kaleido
+
+# Instalar todas as dependências
+pip install -r requirements_api.txt
 ```
 
-## [LISTA] Funcionalidades
+### Configuração do Banco de Dados
+Os scripts estão configurados para conectar ao banco local do GLPI. Verifique as configurações de conexão nos scripts se necessário.
 
-### [OK] Extração via API
-- Dados atualizados em tempo real do GLPI
-- Filtros por período flexíveis
-- Cache inteligente para performance
+### Estrutura de Pastas
+O sistema cria automaticamente as pastas necessárias:
+- `dados/metricas_csv/` - Métricas geradas
+- `dados/tickets_6_meses/` - Tickets dos últimos 6 meses
+- `dados/tickets_completos/` - Todos os tickets
 
-### [OK] Correção de Usuários Excluídos
-O sistema automaticamente:
-- Detecta usuários excluídos da API
-- Mantém cache local de usuários
-- Adiciona sufixo "(não encontrado na API)" para usuários excluídos
-- Garante relatórios 100% confiáveis
+---
 
-### [OK] Análise de Métricas
-- Status, entidades, categorias
-- Produtividade de técnicos
-- Padrões temporais
-- KPIs de performance
+## 📊 Dados e Métricas
 
-### [OK] Múltiplos Formatos
-- CSV para planilhas
-- JSON para integração
-- Relatórios em texto
-- API REST para consultas
+### Campos Padronizados
+Todos os scripts trabalham com campos padronizados:
 
-### [OK] Cache Inteligente
-- Cache automático de usuários, entidades, categorias
-- Reduz chamadas à API
-- Melhora performance significativamente
-- Atualização automática quando necessário
+| Campo Original | Campo Padronizado | Descrição |
+|----------------|-------------------|-----------|
+| `status` | `Status` | Status do ticket |
+| `entidade` | `Entidade` | Órgão/entidade |
+| `tecnico` | `Técnico` | Técnico responsável |
+| `grupo` | `Grupo` | Grupo técnico |
+| `categoria` | `Categoria` | Categoria do atendimento |
+| `localizacao` | `Localização` | Local físico |
+| `data_criacao` | `Data Criação` | Data de abertura |
 
-### [OK] Segurança
-- Credenciais protegidas em `config.py`
-- Dados sensíveis no `.gitignore`
-- Tokens seguros para ambiente controlado
+### Formatação de Dados
+- **Datas**: Conversão automática de string para datetime
+- **Texto**: Limpeza de caracteres especiais e HTML
+- **Encoding**: Suporte completo a UTF-8
+- **Validação**: Verificação de integridade dos dados
 
-## [GRAFICO] Exemplos de Uso
+### Métricas Calculadas
+- **Distribuição por Status**: Percentual de tickets por status
+- **Produtividade**: Tickets por técnico/grupo
+- **Temporal**: Análise de tendências por período
+- **Qualidade**: Relatórios de integridade dos dados
+- **TTR**: Tempo de resolução por grupo
 
-### Extração Básica
+---
+
+## 🔍 Troubleshooting
+
+### Problemas Comuns
+
+#### Erro de Encoding UTF-8
+```
+UnicodeDecodeError: 'utf-8' codec can't decode
+```
+**Solução**: O sistema agora trata automaticamente erros de encoding com `errors='replace'`
+
+#### Erro de Colunas Não Encontradas
+```
+KeyError: 'status'
+```
+**Solução**: Verificar se os nomes das colunas estão em português com capitalização correta
+
+#### Erro de Data
+```
+AttributeError: 'str' object has no attribute 'strftime'
+```
+**Solução**: O sistema agora converte automaticamente strings para datetime
+
+#### Arquivos CSV Não Gerados
+**Diagnóstico**:
+1. Verificar se existem dados no período
+2. Confirmar nomes das colunas
+3. Verificar logs de execução
+
+**Solução**: Execute o pipeline completo com `python main.py`
+
+### Logs e Debugging
 ```bash
-cd scripts/python
-# Extrair últimos 6 meses (padrão)
-python extrair_dados_api_glpi_com_filtro_data.py
-# Escolha opção 3 quando solicitado
+# Ver logs detalhados
+python main.py 2>&1 | tee pipeline.log
+
+# Verificar arquivos gerados
+ls -la dados/metricas_csv/
 ```
 
-### Análise Completa
+### Performance
+- **Dados grandes**: Use filtros por período
+- **Memória**: Processe em lotes menores
+- **Velocidade**: Cache automático implementado
+
+---
+
+## 📈 Estatísticas e Performance
+
+### Última Execução Completa
+- **📊 Total de registros processados**: 2.842 tickets
+- **📋 Colunas padronizadas**: 22 campos
+- **📁 Arquivos gerados**: 18 arquivos de métricas
+- **⏱️ Tempo de execução**: ~30 segundos
+- **📅 Data**: 30/10/2025 13:55
+
+### Arquivos Gerados por Execução
+- **5 arquivos de métricas CSV**: Status, Entidades, Técnicos, TTR, Qualidade
+- **6 arquivos de tickets completos**: Dados históricos
+- **6 arquivos de tickets 6 meses**: Dados recentes
+
+### Performance por Script
+| Script | Tempo Médio | Registros | Observações |
+|--------|-------------|-----------|-------------|
+| `extrair_todos_tickets.py` | 15s | 2.842 | Extração completa |
+| `extrair_metricas_tickets_otimizado.py` | 10s | 2.842 | Análise de métricas |
+| `analisar_dados_csv.py` | 5s | Variável | Análise estatística |
+| `main.py` (completo) | 30s | 2.842 | Pipeline completo |
+
+### Qualidade dos Dados
+- **✅ Integridade**: 100% dos registros processados
+- **✅ Encoding**: UTF-8 com tratamento de erros
+- **✅ Datas**: Conversão automática para datetime
+- **✅ Validação**: Verificação de campos obrigatórios
+- **✅ Padronização**: Nomes de colunas em português
+
+---
+
+## 🎯 Casos de Uso
+
+### Relatórios Gerenciais
 ```bash
-# 1. Extrair dados
-python extrair_dados_api_glpi_com_filtro_data.py
-
-# 2. Gerar métricas
-python extrair_metricas_tickets.py
-
-# 3. Iniciar API para visualização
-python api_metricas.py
+# Pipeline completo para relatório mensal
+python main.py
+python analisar_dados_graficos.py "dados/tickets_6_meses/tickets_*.csv" --html
 ```
 
-### Automação
+### Análise de Produtividade
 ```bash
-# Script automatizado para relatório mensal
-python extrair_dados_api_glpi_com_filtro_data.py --periodo 30 --formato csv
-python extrair_metricas_tickets.py
+# Métricas de técnicos e grupos
+python extrair_metricas_tickets_otimizado.py
+# Verificar: tecnicos_*.csv e ttr_grupo_*.csv
 ```
 
-## [EMOJI] Solução de Problemas
-
-### Erro de Configuração
-| Erro | Solução |
-|------|---------|
-| `config.py não encontrado` | Copie `config_exemplo.py` para `config.py` |
-| `Erro de autenticação` | Verifique tokens no GLPI |
-| `Módulo não encontrado` | Execute `pip install -r requirements_api.txt` |
-
-### Erro de Conexão
+### Dashboards Executivos
 ```bash
-# Verificar conectividade
-python -c "import requests; print(requests.get('http://cau.ppiratini.intra.rs.gov.br/glpi/apirest.php/initSession').status_code)"
+# Gerar visualizações interativas
+python analisar_dados_graficos.py "dados/tickets_6_meses/tickets_*.csv" --html --png
 ```
 
-### Usuários Não Encontrados
-- [OK] **Resolvido automaticamente** - O sistema corrige automaticamente
-- Usuários excluídos aparecem com sufixo "(não encontrado na API)"
-- Cache manual para usuários problemáticos (1439, 1392, 1386)
+### Comparação Temporal
+```bash
+# Comparar últimos meses
+python comparar_periodos.py --pasta "dados/metricas_csv" --html
+```
 
-### Performance Lenta
-- Verifique se o cache está habilitado
-- Reduza o período de extração
-- Use filtros mais específicos
+---
 
-## [METRICAS] Arquivos de Saída
+## 🔒 Segurança e Boas Práticas
 
-### Dados Extraídos
-- `tickets_api_glpi_ultimos_X_meses_YYYYMMDD_HHMMSS.csv`
-- Formato CSV com campos padronizados
-- ID, Título, Entidade, Status, Datas, Técnico, Categoria, etc.
+- **📁 Dados protegidos**: CSVs e relatórios no `.gitignore`
+- **🔐 Conexões seguras**: Configurações de banco protegidas
+- **🧹 Limpeza automática**: Remoção de dados sensíveis
+- **📝 Logs controlados**: Informações de debug sem dados pessoais
 
-### Métricas
-Localizados em `scripts/dados/metricas_csv/`:
-- `metricas_categorias.csv`
-- `metricas_tecnicos.csv`
-- `metricas_entidades.csv`
-- `metricas_localizacoes.csv`
-- `metricas_tempos_resolucao.csv`
+---
 
-### Relatórios
-Localizados em `scripts/dados/relatorios_metricas/`:
-- Relatórios detalhados em formato texto
-- Análises temporais
-- Gráficos e visualizações
-
-## [FOCO] Status do Projeto
-
-- [OK] **Extração de dados:** Funcionando 100%
-- [OK] **Correção de usuários excluídos:** Implementado
-- [OK] **Análise de métricas:** Funcionando
-- [OK] **API REST:** Funcionando
-- [OK] **Cache inteligente:** Implementado
-- [OK] **Documentação:** Consolidada
-
-## [EMOJI] Segurança e Boas Práticas
-
-- **Credenciais protegidas**: `config.py` não é versionado
-- **Dados sensíveis**: CSVs e relatórios no `.gitignore`
-- **Tokens seguros**: Use apenas em ambiente controlado
-- [ERRO] **NUNCA** commite credenciais ou dados reais
-
-## [EMOJI] Suporte
+## 📞 Suporte
 
 Para dúvidas ou problemas:
-1. Verifique este README
-2. Execute scripts com `--help` para ver opções
-3. Verifique logs de erro para diagnóstico
-4. Valide configurações da API GLPI
+1. 📖 Consulte este README
+2. 🔍 Execute scripts com logs detalhados
+3. 🐛 Verifique a seção de Troubleshooting
+4. 📊 Valide a integridade dos dados gerados
 
 ---
 
 **Sistema GLPI - Governo do Estado do Rio Grande do Sul**  
-**Última atualização:** 23/10/2025  
-**Status:** [OK] Projeto funcional e pronto para produção
+**📅 Última atualização**: 30/10/2025  
+**✅ Status**: Projeto funcional e pronto para produção  
+**🔧 Versão**: 2.0 (Otimizada e Consolidada)
