@@ -1,0 +1,104 @@
+# GUIA COMPLETO: Validação de Implantação Azure com PowerShell
+# ==============================================================================
+# Este guia demonstra como usar PowerShell para validar templates ARM/Bicep
+# ==============================================================================
+
+## PRÉ-REQUISITOS
+
+### 1. Instalar Azure CLI
+# Acesse: https://aka.ms/installazurecliwindows
+# Baixe e execute o instalador
+# Reinicie o PowerShell após instalação
+
+### 2. Instalar Azure PowerShell (Opcional)
+Install-Module -Name Az -Force -AllowClobber -Scope CurrentUser
+
+## CONEXÃO COM AZURE
+
+### Conectar via Azure CLI (Recomendado)
+az login
+
+### Conectar via Azure PowerShell
+Connect-AzAccount
+
+## COMANDOS ESSENCIAIS DE VALIDAÇÃO
+
+# 1. Listar assinaturas
+az account list
+
+# 2. Listar grupos de recursos
+az group list
+
+# 3. Criar grupo de recursos para teste
+az group create --name TestRG --location eastus
+# Ou use brazilsouth para servidor no Brasil
+
+# 4. Validar template ARM
+az deployment group validate --resource-group TestRG --template-file template.json
+
+# 5. Validar template com parâmetros
+az deployment group validate --resource-group TestRG --template-file template.json --parameters @parameters.json
+
+# 6. Validar template Bicep
+az deployment group validate --resource-group TestRG --template-file template.bicep
+
+# 7. Implantação (após validação bem-sucedida)
+az deployment group create --resource-group TestRG --template-file template.json --name MyDeployment
+
+## EXEMPLO DE TEMPLATE ARM (test-template.json)
+# O arquivo test-template.json foi criado com um exemplo de conta de armazenamento
+
+## COMANDOS POWERSHELL ALTERNATIVOS
+
+# Listar grupos de recursos
+Get-AzResourceGroup
+
+# Validar template
+Test-AzResourceGroupDeployment -ResourceGroupName "TestRG" -TemplateFile "test-template.json"
+
+# Criar grupo de recursos
+New-AzResourceGroup -Name "TestRG" -Location "eastus"
+
+## TRATAMENTO DE ERROS
+
+# Validar com debug para mais detalhes
+az deployment group validate --resource-group TestRG --template-file template.json --debug
+
+# Verificar logs de implantação
+az deployment group list --resource-group TestRG
+az deployment group show --resource-group TestRG --name MyDeployment
+
+## LIMPEZA
+
+# Excluir grupo de recursos de teste
+az group delete --name TestRG --yes
+
+## DICAS IMPORTANTES
+
+# 1. Sempre valide antes de implantar em produção
+# 2. Use grupos de recursos separados para teste e produção
+# 3. Use --what-if para pré-visualizar mudanças
+# 4. Mantenha templates em controle de versão (Git)
+# 5. Use parâmetros para valores que mudam entre ambientes
+
+## COMANDOS PARA TESTAR AGORA
+
+# Após instalar o Azure CLI, execute estes comandos em ordem:
+
+# 1. Conectar
+az login
+
+# 2. Verificar assinatura
+az account show
+
+# 3. Criar grupo de teste
+az group create --name TestRG --location eastus
+
+# 4. Testar validação com nosso template de exemplo
+az deployment group validate --resource-group TestRG --template-file test-template.json
+
+# 5. Se a validação passar, implantar
+az deployment group create --resource-group TestRG --template-file test-template.json --name TestStorageDeployment
+
+# 6. Verificar resultado
+az deployment group show --resource-group TestRG --name TestStorageDeployment

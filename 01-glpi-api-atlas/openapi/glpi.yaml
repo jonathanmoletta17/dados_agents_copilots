@@ -1,0 +1,675 @@
+openapi: 3.0.3
+info:
+  title: GLPI API Atlas
+  version: 0.1.0
+  description: Catálogo inicial da API GLPI
+servers:
+  - url: /apirest.php
+components:
+  securitySchemes:
+    AppToken:
+      type: apiKey
+      in: header
+      name: App-Token
+    SessionToken:
+      type: apiKey
+      in: header
+      name: Session-Token
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        content:
+          type: string
+        status:
+          type: integer
+        priority:
+          type: integer
+        urgency:
+          type: integer
+        impact:
+          type: integer
+        itilcategories_id:
+          type: integer
+        entities_id:
+          type: integer
+        date:
+          type: string
+        date_mod:
+          type: string
+        solvedate:
+          type: string
+        closedate:
+          type: string
+        solve_delay_stat:
+          type: integer
+        close_delay_stat:
+          type: integer
+        satisfaction:
+          type: string
+        type:
+          type: integer
+        locations_id:
+          type: integer
+        global_validation:
+          type: integer
+paths:
+  /initSession:
+    get:
+      security:
+        - AppToken: []
+      responses:
+        '200':
+          description: Ok
+  /killSession:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '200':
+          description: Ok
+  /Ticket:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+        - in: query
+          name: expand_dropdowns
+          schema:
+            type: boolean
+        - in: query
+          name: get_hateoas
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Lista de tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ticket'
+      responses:
+        '201':
+          description: Criado
+  /Ticket/{id}:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+    put:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ticket'
+      responses:
+        '200':
+          description: Atualizado
+    delete:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Removido
+
+  /User:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de usuários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '201':
+          description: Criado
+
+  /Group:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de grupos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Entity:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de entidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /ITILCategory:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de categorias ITIL
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Ticket_User:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Relacionamentos usuário-ticket
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '201':
+          description: Criado
+    delete:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '204':
+          description: Removido
+
+  /Group_Ticket:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Relacionamentos grupo-ticket
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '201':
+          description: Criado
+    delete:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '204':
+          description: Removido
+
+  /search/Ticket:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+        - in: query
+          name: criteria[0][field]
+          schema:
+            type: string
+        - in: query
+          name: criteria[0][searchtype]
+          schema:
+            type: string
+        - in: query
+          name: criteria[0][value]
+          schema:
+            type: string
+        - in: query
+          name: forcedisplay[]
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resultado de busca de tickets
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ITILFollowup:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de followups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '201':
+          description: Criado
+
+  /Task:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de tarefas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '201':
+          description: Criado
+
+  /Document:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de documentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      responses:
+        '201':
+          description: Criado
+
+  /KnowbaseItem:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista da base de conhecimento
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Problem:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de problemas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Change:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de mudanças
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Computer:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de computadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /NetworkEquipment:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de equipamentos de rede
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Printer:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de impressoras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Peripheral:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de periféricos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Phone:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de telefones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Software:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de softwares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Location:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de localizações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Supplier:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de fornecedores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /Contract:
+    get:
+      security:
+        - AppToken: []
+        - SessionToken: []
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de contratos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object

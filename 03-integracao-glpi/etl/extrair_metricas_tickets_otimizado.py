@@ -3,14 +3,14 @@ Analisador de Métricas de Tickets GLPI - Versão Otimizada
 ========================================================
 
 Esta versão otimizada implementa as recomendações estruturais para
-melhor qualidade e padronização dos dados XLSX.
+melhor qualidade e padronização dos dados CSV.
 
 Melhorias implementadas:
 - Padronização de nomes de colunas (snake_case, sem acentos)
 - Validação e conversão de formatos de data para ISO 8601
 - Validação de dados numéricos
 - Padronização de categorias
-- Validação de integridade dos dados XLSX
+- Validação de integridade dos dados CSV
 - Documentação automática da estrutura dos dados
 
 Autor: Sistema de Análise de Tickets GLPI
@@ -66,13 +66,13 @@ class AnalisadorMetricasOtimizado:
         
         # Prioridade 1: Arquivo fixo dos últimos 6 meses
         pasta_6_meses = "../dados/tickets_6_meses/"
-        fixo_6m = os.path.join(pasta_6_meses, "tickets_ultimos_6_meses_atual.xlsx")
+        fixo_6m = os.path.join(pasta_6_meses, "tickets_ultimos_6_meses_atual.csv")
         if os.path.exists(fixo_6m):
             logger.info(f"[OK] Usando arquivo fixo dos últimos 6 meses: {os.path.basename(fixo_6m)}")
             return fixo_6m
         # Fallback: arquivos com timestamp
         if os.path.exists(pasta_6_meses):
-            arquivos_6_meses = glob.glob(os.path.join(pasta_6_meses, "tickets_api_glpi_ultimos_6_meses_*.xlsx"))
+            arquivos_6_meses = glob.glob(os.path.join(pasta_6_meses, "tickets_api_glpi_ultimos_6_meses_*.csv"))
             if arquivos_6_meses:
                 arquivo_mais_recente = max(arquivos_6_meses, key=os.path.getctime)
                 logger.info(f"[OK] Usando dados filtrados dos últimos 6 meses: {os.path.basename(arquivo_mais_recente)}")
@@ -80,15 +80,15 @@ class AnalisadorMetricasOtimizado:
         
         # Prioridade 2: Arquivo fixo completo
         pasta_completos = "../dados/tickets_completos/"
-        fixo_completo = os.path.join(pasta_completos, "todos_tickets_atual.xlsx")
+        fixo_completo = os.path.join(pasta_completos, "todos_tickets_atual.csv")
         if os.path.exists(fixo_completo):
             logger.warning(f"[AVISO] Usando arquivo fixo completo: {os.path.basename(fixo_completo)}")
             return fixo_completo
         # Fallback: arquivos com timestamp
         if os.path.exists(pasta_completos):
             arquivos_completos = []
-            arquivos_completos.extend(glob.glob(os.path.join(pasta_completos, "todos_tickets_*.xlsx")))
-            arquivos_completos.extend(glob.glob(os.path.join(pasta_completos, "tickets_api_glpi_completo_*.xlsx")))
+            arquivos_completos.extend(glob.glob(os.path.join(pasta_completos, "todos_tickets_*.csv")))
+            arquivos_completos.extend(glob.glob(os.path.join(pasta_completos, "tickets_api_glpi_completo_*.csv")))
             
             if arquivos_completos:
                 arquivo_mais_recente = max(arquivos_completos, key=os.path.getctime)
@@ -99,20 +99,33 @@ class AnalisadorMetricasOtimizado:
     
     def carregar_e_validar_dados(self, arquivo_path: str) -> None:
         """
-        Carrega e valida os dados do arquivo XLSX
+        Carrega e valida os dados do arquivo CSV
         
         Args:
-            arquivo_path (str): Caminho do arquivo XLSX
+            arquivo_path (str): Caminho do arquivo CSV
         """
         logger.info(f"Carregando e validando dados: {arquivo_path}")
         
         try:
-            logger.info("Tentando carregar arquivo XLSX...")
-            df_loaded = pd.read_excel(arquivo_path)
-            logger.info("[OK] Arquivo carregado com sucesso")
+            # Tentar diferentes encodings para carregar dados originais
+            encodings_to_try = ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+            df_loaded = None
+            
+            for encoding in encodings_to_try:
+                try:
+                    logger.info(f"Tentando carregar arquivo com encoding: {encoding}")
+                    df_loaded = pd.read_csv(arquivo_path, encoding=encoding, sep=';')
+                    logger.info(f"[OK] Arquivo carregado com sucesso usando encoding: {encoding}")
+                    break
+                except UnicodeDecodeError as e:
+                    logger.warning(f"Falha ao carregar com encoding {encoding}: {str(e)}")
+                    continue
+                except Exception as e:
+                    logger.warning(f"Erro inesperado com encoding {encoding}: {str(e)}")
+                    continue
             
             if df_loaded is None:
-                raise ValueError("Não foi possível carregar o arquivo XLSX")
+                raise ValueError("Não foi possível carregar o arquivo com nenhum dos encodings testados")
             
             self.df_original = df_loaded
             logger.info(f"Dados originais carregados: {len(self.df_original)} registros, {len(self.df_original.columns)} colunas")
@@ -415,17 +428,17 @@ class AnalisadorMetricasOtimizado:
                     print(f"   • {prioridade} (SLA: {sla_limite}h): {dentro}/{total} ({percentual:.1f}%) - TTR médio: {ttr_medio:.1f}h")
         print()
     
-    def exportar_metricas_xlsx(self) -> None:
-        """Exporta métricas em formato XLSX otimizado com backup automático"""
-        logger.info("Exportando métricas em XLSX...")
+    def exportar_metricas_csv(self) -> None:
+        """Exporta métricas em formato CSV otimizado com backup automático"""
+        logger.info("Exportando métricas em CSV...")
         
-        pasta_xlsx = "../dados/metricas_xlsx/"
-        os.makedirs(pasta_xlsx, exist_ok=True)
+        pasta_csv = "../dados/metricas_csv/"
+        os.makedirs(pasta_csv, exist_ok=True)
         
         # Gerar timestamp para esta execução
         self.timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        print("[SALVAR] EXPORTANDO MÉTRICAS EM XLSX...")
+        print("[SALVAR] EXPORTANDO MÉTRICAS EM CSV...")
         print("-" * 50)
         
         try:
@@ -434,7 +447,7 @@ class AnalisadorMetricasOtimizado:
                 status_df = self.df['Status'].value_counts().reset_index()
                 status_df.columns = ['status', 'quantidade']
                 status_df['percentual'] = (status_df['quantidade'] / len(self.df) * 100).round(2)
-                arquivo_status = FileManager.gerar_nome_fixo(pasta_xlsx, 'status')
+                arquivo_status = FileManager.gerar_nome_fixo(pasta_csv, 'status')
                 sucesso = FileManager.salvar_com_backup(status_df, arquivo_status, "métricas de status")
                 if sucesso:
                     print(f"[OK] Status: {arquivo_status}")
@@ -446,7 +459,7 @@ class AnalisadorMetricasOtimizado:
                 entidades_df = self.df['Entidade'].value_counts().reset_index()
                 entidades_df.columns = ['entidade', 'quantidade']
                 entidades_df['percentual'] = (entidades_df['quantidade'] / len(self.df) * 100).round(2)
-                arquivo_entidades = FileManager.gerar_nome_fixo(pasta_xlsx, 'entidades')
+                arquivo_entidades = FileManager.gerar_nome_fixo(pasta_csv, 'entidades')
                 sucesso = FileManager.salvar_com_backup(entidades_df, arquivo_entidades, "métricas de entidades")
                 if sucesso:
                     print(f"[OK] Entidades: {arquivo_entidades}")
@@ -458,7 +471,7 @@ class AnalisadorMetricasOtimizado:
                 tecnicos_df = self.df['Técnico'].value_counts().reset_index()
                 tecnicos_df.columns = ['tecnico', 'quantidade']
                 tecnicos_df['percentual'] = (tecnicos_df['quantidade'] / len(self.df) * 100).round(2)
-                arquivo_tecnicos = FileManager.gerar_nome_fixo(pasta_xlsx, 'tecnicos')
+                arquivo_tecnicos = FileManager.gerar_nome_fixo(pasta_csv, 'tecnicos')
                 sucesso = FileManager.salvar_com_backup(tecnicos_df, arquivo_tecnicos, "métricas de técnicos")
                 if sucesso:
                     print(f"[OK] Técnicos: {arquivo_tecnicos}")
@@ -473,7 +486,7 @@ class AnalisadorMetricasOtimizado:
                     ttr_grupo_df = df_ttr.groupby('Grupo')['ttr_horas'].agg(['mean', 'median', 'count']).round(2)
                     ttr_grupo_df.columns = ['ttr_medio_horas', 'ttr_mediano_horas', 'quantidade_tickets']
                     ttr_grupo_df = ttr_grupo_df.reset_index()
-                    arquivo_ttr = FileManager.gerar_nome_fixo(pasta_xlsx, 'ttr_grupo')
+                    arquivo_ttr = FileManager.gerar_nome_fixo(pasta_csv, 'ttr_grupo')
                     sucesso = FileManager.salvar_com_backup(ttr_grupo_df, arquivo_ttr, "métricas de TTR por grupo")
                     if sucesso:
                         print(f"[OK] TTR por Grupo: {arquivo_ttr}")
@@ -487,7 +500,7 @@ class AnalisadorMetricasOtimizado:
                 {'metrica': 'linhas_duplicadas', 'valor': self.relatorio_qualidade['duplicatas']},
                 {'metrica': 'erros_validacao', 'valor': len(self.relatorio_qualidade.get('erros_validacao', []))}
             ])
-            arquivo_qualidade = FileManager.gerar_nome_fixo(pasta_xlsx, 'relatorio_qualidade')
+            arquivo_qualidade = FileManager.gerar_nome_fixo(pasta_csv, 'relatorio_qualidade')
             sucesso = FileManager.salvar_com_backup(relatorio_df, arquivo_qualidade, "relatório de qualidade")
             if sucesso:
                 print(f"[OK] Relatório de Qualidade: {arquivo_qualidade}")
@@ -530,7 +543,7 @@ class AnalisadorMetricasOtimizado:
         print("   [OK] Documentação automática da estrutura")
         print()
         print("[DADOS] Métricas exibidas na tela")
-        print("[SALVAR] Métricas exportadas em formato XLSX")
+        print("[SALVAR] Métricas exportadas em formato CSV")
         print("[DOC] Documentação gerada automaticamente")
         print("[FIM] Obrigado por usar o Analisador de Métricas Otimizado!")
 
@@ -556,7 +569,7 @@ def main():
         analisador.calcular_metricas_performance()
         
         # Exportar resultados
-        analisador.exportar_metricas_xlsx()
+        analisador.exportar_metricas_csv()
         
         # Relatório final
         analisador.gerar_relatorio_final()

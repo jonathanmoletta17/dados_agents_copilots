@@ -21,11 +21,18 @@ scripts/dados/metricas_csv/*.csv
 
 # Configurações com credenciais
 config.py
+!scripts/python/config.py
 config.json
 config.yaml
 .env
 .env.local
 .env.production
+
+# DADOS GERADOS (XLSX/JSON)
+scripts/dados/**/*.xlsx
+scripts/dados/**/*.xls
+scripts/dados/resumo_exportacao.json
+scripts/dados/tickets_consolidado_sharepoint.xlsx
 
 # Arquivos de credenciais
 credentials.json
@@ -288,6 +295,8 @@ sample_*.csv
 *_exemplo.csv
 *_sample.csv
 
-# Documentação gerada
 docs/build/
 documentation/build/
+
+# Node
+node_modules/

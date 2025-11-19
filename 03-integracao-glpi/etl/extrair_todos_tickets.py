@@ -11,21 +11,9 @@ import html
 import re
 import sys
 import os
-import pandas as pd
 from datetime import datetime, timedelta
 from collections import defaultdict
 from file_manager import FileManager
-
-# Adicionar diretório tools ao path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
-try:
-    from text_processor import TextProcessor
-except ImportError:
-    # Fallback simples se não encontrar
-    class TextProcessor:
-        @staticmethod
-        def html_to_markdown(text):
-            return str(text) if text else ""
 
 # Configurar encoding para Windows
 if os.name == 'nt':  # Windows
@@ -97,26 +85,6 @@ class GLPITodosTicketsExtractor:
             print(f"[ERRO] Erro na conexão: {e}")
             return False
     
-    def parse_data(self, data_str):
-        """Converte string de data para objeto datetime (para Excel)"""
-        if not data_str or data_str == 'NULL':
-            return None
-        
-        try:
-            if ' ' in data_str:
-                return datetime.strptime(data_str, '%Y-%m-%d %H:%M:%S')
-            else:
-                return datetime.strptime(data_str, '%Y-%m-%d')
-        except:
-            return None
-
-    def formatar_data(self, data_str):
-        """Mantido para compatibilidade, mas usa parse_data"""
-        dt = self.parse_data(data_str)
-        if dt:
-            return dt.strftime('%d/%m/%Y %H:%M:%S')
-        return ""
-
     def processar_dados_tickets(self, tickets, relacionamentos, descricao="tickets"):
         """Processa e formata dados dos tickets"""
         print(f"🧹 Processando e formatando {descricao}...")
@@ -136,38 +104,19 @@ class GLPITodosTicketsExtractor:
                 # Buscar relacionamentos
                 rel = relacionamentos[ticket_id]
                 
-                # URL do GLPI
-                url_glpi = f"{self.api_url.replace('/apirest.php', '')}/front/ticket.form.php?id={ticket_id}"
-
-                # Datas
-                dt_criacao = self.parse_data(ticket.get('date'))
-                dt_modificacao = self.parse_data(ticket.get('date_mod'))
-                
-                # Tempo em aberto
-                tempo_aberto = None
-                status = self.traduzir_status(ticket.get('status', 1))
-                if dt_criacao:
-                    if status in ['Solucionado', 'Fechado']:
-                        # Idealmente usaria data de solução, mas por enquanto deixamos vazio ou calculamos se tivermos data_solucao
-                        pass 
-                    else:
-                        tempo_aberto = (datetime.now() - dt_criacao).days
-
                 # Montar linha de dados
                 linha = {
                     'ID': ticket_id,
                     'Título': self.limpar_campo_texto(ticket.get('name', '')),
-                    'Descrição': TextProcessor.html_to_markdown(ticket.get('content', '')),
-                    'Status': status,
+                    'Descrição': self.limpar_descricao(ticket.get('content', '')),
+                    'Status': self.traduzir_status(ticket.get('status', 1)),
                     'Categoria': categoria,
                     'Entidade': entidade,
                     'Requerente': rel['requerente'],
                     'Técnico': rel['tecnico'],
                     'Grupo': rel['grupo'],
-                    'Data Criação': dt_criacao,
-                    'Data Modificação': dt_modificacao,
-                    'URL GLPI': url_glpi,
-                    'Tempo em Aberto (dias)': tempo_aberto
+                    'Data Criação': self.formatar_data(ticket.get('date')),
+                    'Data Modificação': self.formatar_data(ticket.get('date_mod')),
                 }
                 
                 dados_formatados.append(linha)
@@ -205,8 +154,39 @@ class GLPITodosTicketsExtractor:
             return ""
     
     def limpar_descricao(self, descricao_raw):
-        """Limpa e otimiza a descrição do ticket (Mantido para compatibilidade)"""
-        return TextProcessor.html_to_markdown(descricao_raw)
+        """Limpa e otimiza a descrição do ticket"""
+        if not descricao_raw:
+            return ""
+        
+        try:
+            descricao = html.unescape(str(descricao_raw))
+            descricao = re.sub(r'<[^>]+>', '', descricao)
+            descricao = re.sub(r'\s+', ' ', descricao)
+            descricao = descricao.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            descricao = re.sub(r'[\u200b-\u200f\u2028-\u202f\u205f-\u206f]', '', descricao)
+            
+            if len(descricao) > 500:
+                descricao = descricao[:497] + "..."
+            
+            return descricao.strip()
+        except Exception as e:
+            print(f"[AVISO] Erro ao limpar descrição: {e}")
+            return ""
+    
+    def formatar_data(self, data_str):
+        """Formata data para o padrão brasileiro"""
+        if not data_str or data_str == 'NULL':
+            return ""
+        
+        try:
+            if ' ' in data_str:
+                data_obj = datetime.strptime(data_str, '%Y-%m-%d %H:%M:%S')
+                return data_obj.strftime('%d/%m/%Y %H:%M:%S')
+            else:
+                data_obj = datetime.strptime(data_str, '%Y-%m-%d')
+                return data_obj.strftime('%d/%m/%Y')
+        except:
+            return str(data_str)
     
     def traduzir_status(self, status_id):
         """Traduz ID do status para texto"""
@@ -516,20 +496,7 @@ class GLPITodosTicketsExtractor:
             print("=" * 60)
             print("[EMOJI] SALVANDO ARQUIVO COMPLETO")
             print("=" * 60)
-            
-            # Converter dados para DataFrame
-            if dados_completos:
-                df_completo = pd.DataFrame(dados_completos)
-                cols = ['ID','Título','Descrição','Status','Categoria','Entidade','Requerente','Técnico','Grupo','Data Criação','Data Modificação', 'URL GLPI', 'Tempo em Aberto (dias)']
-                for col in cols:
-                    if col not in df_completo.columns:
-                        df_completo[col] = None
-                df_completo = df_completo[cols]
-            else:
-                cols = ['ID','Título','Descrição','Status','Categoria','Entidade','Requerente','Técnico','Grupo','Data Criação','Data Modificação', 'URL GLPI', 'Tempo em Aberto (dias)']
-                df_completo = pd.DataFrame(columns=cols)
-            
-            sucesso_completo = FileManager.salvar_com_backup(df_completo, nome_arquivo_completo, "arquivo completo")
+            sucesso_completo = self.salvar_dados_csv(dados_completos, nome_arquivo_completo, "arquivo completo")
             if sucesso_completo:
                 self.enforce_base_schema(nome_arquivo_completo)
             
@@ -538,20 +505,7 @@ class GLPITodosTicketsExtractor:
             print("=" * 60)
             print("[EMOJI] SALVANDO ARQUIVO DOS ÚLTIMOS 6 MESES")
             print("=" * 60)
-            
-            # Converter dados para DataFrame
-            if dados_6_meses:
-                df_6m = pd.DataFrame(dados_6_meses)
-                cols = ['ID','Título','Descrição','Status','Categoria','Entidade','Requerente','Técnico','Grupo','Data Criação','Data Modificação', 'URL GLPI', 'Tempo em Aberto (dias)']
-                for col in cols:
-                    if col not in df_6m.columns:
-                        df_6m[col] = None
-                df_6m = df_6m[cols]
-            else:
-                cols = ['ID','Título','Descrição','Status','Categoria','Entidade','Requerente','Técnico','Grupo','Data Criação','Data Modificação', 'URL GLPI', 'Tempo em Aberto (dias)']
-                df_6m = pd.DataFrame(columns=cols)
-            
-            sucesso_6m = FileManager.salvar_com_backup(df_6m, nome_arquivo_6m, "arquivo dos últimos 6 meses")
+            sucesso_6m = self.salvar_dados_csv(dados_6_meses, nome_arquivo_6m, "arquivo dos últimos 6 meses")
             if sucesso_6m:
                 self.enforce_base_schema(nome_arquivo_6m)
             
@@ -584,8 +538,7 @@ class GLPITodosTicketsExtractor:
             import csv, os
             cols = [
                 "ID","Título","Descrição","Status","Categoria","Entidade",
-                "Requerente","Técnico","Grupo","Data Criação","Data Modificação",
-                "URL GLPI", "Tempo em Aberto (dias)"
+                "Requerente","Técnico","Grupo","Data Criação","Data Modificação"
             ]
             tmp = caminho + ".tmp"
             with open(caminho, "r", encoding="utf-8-sig", newline="") as fin, open(tmp, "w", encoding="utf-8-sig", newline="") as fout:
@@ -629,44 +582,34 @@ class GLPITodosTicketsExtractor:
         
         return tickets_filtrados
 
-    def salvar_dados_xlsx(self, dados_formatados, nome_arquivo, descricao="dados"):
-        """Salva dados formatados em arquivo XLSX"""
+    def salvar_dados_csv(self, dados_formatados, nome_arquivo, descricao="dados"):
+        """Salva dados formatados em arquivo CSV"""
         try:
             # Criar diretório se não existir
             os.makedirs(os.path.dirname(nome_arquivo), exist_ok=True)
             
             print(f"[SALVAR] Salvando {descricao} em: {nome_arquivo}")
             
-            if not dados_formatados:
-                # Criar DataFrame vazio com as colunas necessárias
-                cols = [
-                    'ID','Título','Descrição','Status','Categoria','Entidade',
-                    'Requerente','Técnico','Grupo','Data Criação','Data Modificação',
-                    'URL GLPI', 'Tempo em Aberto (dias)'
-                ]
-                df = pd.DataFrame(columns=cols)
-            else:
-                # Converter lista de dicionários para DataFrame
-                df = pd.DataFrame(dados_formatados)
-                
-                # Garantir que todas as colunas existam
-                cols = [
-                    'ID','Título','Descrição','Status','Categoria','Entidade',
-                    'Requerente','Técnico','Grupo','Data Criação','Data Modificação',
-                    'URL GLPI', 'Tempo em Aberto (dias)'
-                ]
-                for col in cols:
-                    if col not in df.columns:
-                        df[col] = ''
-                
-                # Reordenar colunas
-                df = df[cols]
-            
-            # Salvar como XLSX usando pandas com openpyxl
-            df.to_excel(nome_arquivo, index=False, engine='openpyxl')
+            sep = ';'
+            cols = [
+                'ID','Título','Descrição','Status','Categoria','Entidade',
+                'Requerente','Técnico','Grupo','Data Criação','Data Modificação'
+            ]
+            with open(nome_arquivo, 'w', encoding='utf-8-sig', newline='') as f:
+                if not dados_formatados:
+                    f.write('')
+                else:
+                    f.write(sep.join(cols) + '\n')
+                    for r in dados_formatados:
+                        vals = []
+                        for c in cols:
+                            v = r.get(c, '')
+                            s = str(v).replace('\r', ' ').replace('\n', ' ').replace('\t', ' ').replace(';', ' ')
+                            vals.append(s)
+                        f.write(sep.join(vals) + '\n')
             
             print(f"[OK] Arquivo {descricao} salvo com sucesso!")
-            print(f"[DADOS] Total de tickets exportados: {len(dados_formatados) if dados_formatados else 0:,}")
+            print(f"[DADOS] Total de tickets exportados: {len(dados_formatados):,}")
             return True
             
         except Exception as e:
