@@ -24,7 +24,7 @@ export default function ResultsTable({ rows, sort, setSort, page, setPage }: { r
             const isNumericTitle = !hasHighlight && r.titulo && String(r.titulo).trim() === String(r.id)
             const plainTitle = isNumericTitle ? (r.descricao || '') : (r.titulo || '')
             return (
-            <tr key={r.id} className="cursor-pointer hover:bg-gray-100" onClick={()=>window.open(glpiUrl(r.id), '_blank')}>
+            <tr key={r.id} className="cursor-pointer hover:bg-gray-100" onClick={()=>window.open(r.url || glpiUrl(r.id), '_blank')}>
               <td className="p-2 border">{r.id}</td>
               <td className="p-2 border">
                 {hasHighlight ? (
