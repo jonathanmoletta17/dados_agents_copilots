@@ -1,19 +1,46 @@
-export default function FilterChips({ filters, setFilters }: { filters: Record<string,string>, setFilters: (f:Record<string,string>)=>void }) {
-  const update = (k:string,v:string)=> setFilters({ ...filters, [k]: v })
-  const Chip = ({label,k}:{label:string,k:string})=> (
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600">{label}</span>
-      <input className="border rounded px-2 py-1" value={filters[k]||''} onChange={e=>update(k,e.target.value)} />
-    </div>
-  )
+export default function FilterChips({ filters, onRemove }: { filters: Record<string, any>, onRemove: (k: string) => void }) {
+  const entries = Object.entries(filters).filter(([_, v]) => v !== '' && v !== undefined && v !== null)
+
+  if (entries.length === 0) return null
+
+  const getLabel = (key: string) => {
+    const labels: Record<string, string> = {
+      status: 'Status',
+      entidade: 'Entidade',
+      categoria: 'Categoria',
+      tecnico: 'Técnico',
+      grupo: 'Grupo',
+      requerente: 'Requerente'
+    }
+    return labels[key] || key
+  }
+
   return (
-    <div className="flex flex-wrap gap-4">
-      <Chip label="status" k="status" />
-      <Chip label="técnico" k="tecnico" />
-      <Chip label="entidade" k="entidade" />
-      <Chip label="categoria" k="categoria" />
-      <Chip label="início" k="dt_ini" />
-      <Chip label="fim" k="dt_fim" />
+    <div className="flex flex-wrap gap-2 items-center">
+      <span className="text-sm font-medium text-gray-600">Filtros ativos:</span>
+      {entries.map(([key, value]) => (
+        <div
+          key={key}
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium border border-blue-300"
+        >
+          <span className="font-semibold">{getLabel(key)}:</span>
+          <span>{value}</span>
+          <button
+            onClick={() => onRemove(key)}
+            className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => entries.forEach(([k]) => onRemove(k))}
+        className="text-sm text-red-600 hover:text-red-700 font-medium hover:underline"
+      >
+        Limpar todos
+      </button>
     </div>
   )
 }

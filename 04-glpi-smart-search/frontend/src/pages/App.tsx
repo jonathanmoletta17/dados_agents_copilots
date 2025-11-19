@@ -1,56 +1,78 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState, useEffect } from 'react'
 import SearchBar from '../components/SearchBar'
-import FilterChips from '../components/FilterChips'
 import ResultsTable from '../components/ResultsTable'
 import StatsPanel from '../components/StatsPanel'
-import ErrorBoundary from '../components/ErrorBoundary'
-import { exportUrl, searchApi, statsApi } from '../services/api'
+import FilterChips from '../components/FilterChips'
+import { searchApi, statsApi } from '../services/api'
 
 export default function App() {
   const [q, setQ] = useState('')
-  const [filters, setFilters] = useState<Record<string,string>>({})
-  const [rows, setRows] = useState<any[]>([])
+  const [results, setResults] = useState([])
+  const [stats, setStats] = useState<any>(null)
+  const [filters, setFilters] = useState({})
   const [page, setPage] = useState(1)
-  const [size] = useState(20)
   const [sort, setSort] = useState('score')
-  const [stats, setStats] = useState({ status: [], entidade: [] } as any)
 
-  useEffect(()=>{(async()=>{try{const s=await statsApi();setStats(s)}catch(e){setStats({ status: [], entidade: [] })}})()},[])
-  useEffect(()=>{
-    const t = setTimeout(async ()=>{
-      try{const r=await searchApi({ q, ...filters, page, size, sort });setRows(r)}catch(e){setRows([])}} , 250)
-    return ()=>clearTimeout(t)
-  },[q,filters,page,size,sort])
+  useEffect(() => {
+    statsApi().then(setStats).catch(() => { })
+  }, [])
 
-  const params = useMemo(()=>({ q, ...filters, page, size, sort }),[q,filters,page,size,sort])
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchApi({ q, ...filters, page, size: 20, sort }).then(setResults).catch(() => setResults([]))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [q, filters, page, sort])
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 py-4">
-      <div className="text-2xl font-bold mb-4">GLPI Smart Search</div>
-      <ErrorBoundary>
-        <SearchBar value={q} onChange={setQ} />
-      </ErrorBoundary>
-      <div className="mt-3">
-        <ErrorBoundary>
-          <FilterChips filters={filters} setFilters={setFilters} />
-        </ErrorBoundary>
-      </div>
-      <div className="flex items-center gap-2 mt-3">
-        <a className="px-3 py-2 border rounded" href={exportUrl(params,'csv')} target="_blank">exportar CSV</a>
-        <a className="px-3 py-2 border rounded" href={exportUrl(params,'xlsx')} target="_blank">exportar XLSX</a>
-      </div>
-      <div className="grid grid-cols-12 gap-6 mt-4">
-        <div className="col-span-9">
-          <ErrorBoundary>
-            <ResultsTable rows={rows} sort={sort} setSort={setSort} page={page} setPage={setPage} />
-          </ErrorBoundary>
+    <div className="min-h-screen">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <h1 className="text-2xl font-bold">GLPI Smart Search</h1>
+          <p className="text-blue-100 text-sm mt-1">Sistema Inteligente de Busca de Tickets</p>
         </div>
-        <div className="col-span-3">
-          <ErrorBoundary>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Search Bar */}
+        <div className="mb-8">
+          <SearchBar
+            value={q}
+            onChange={setQ}
+            onFilterChange={setFilters}
+          />
+        </div>
+
+        {/* Stats Panel */}
+        {stats && (
+          <div className="mb-8">
             <StatsPanel stats={stats} />
-          </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Active Filters */}
+        {Object.keys(filters).length > 0 && (
+          <div className="mb-6">
+            <FilterChips filters={filters} onRemove={(k) => {
+              const newF = { ...filters }
+              delete newF[k]
+              setFilters(newF)
+            }} />
+          </div>
+        )}
+
+        {/* Results */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <ResultsTable
+            rows={results}
+            sort={sort}
+            setSort={setSort}
+            page={page}
+            setPage={setPage}
+          />
         </div>
-      </div>
+      </main>
     </div>
   )
 }
