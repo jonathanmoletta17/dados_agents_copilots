@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: sis-search-frontend
+    ports:
+      - "3004:80"
+    restart: unless-stopped
+    networks:
+      - glpi-network
+
+networks:
+  glpi-network:
+    name: glpi-data-service_glpi-network
+    external: true

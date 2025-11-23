@@ -1,71 +1,60 @@
-# Projeto GLPI - Suite de Ferramentas
+# BD CAU - Sistema Integrado
 
-Este repositório contém três projetos distintos relacionados ao GLPI (Gerenciador de Problemas e Inventário), agora organizados de forma limpa e profissional.
+Este repositório contém os microsserviços e frontends do ecossistema BD CAU.
 
-## 📁 Estrutura do Projeto
+## 🚀 Como Executar
 
-### 📋 01-glpi-api-atlas
-**Mapeamento completo da API REST do GLPI**
+A ordem de execução é importante: **primeiro o Backend, depois os Frontends.**
 
-- **Documentação OpenAPI**: Especificação completa dos endpoints
-- **SDK Python**: Cliente Python para integração com a API GLPI
-- **Exemplos**: Scripts de exemplo para uso da API
-- **Coleções**: Arquivos Postman/Insomnia para testes
+### 1. Backend (Obrigatório)
 
-**Uso rápido:**
-```python
-from glpi_client import GLPIClient
+O `glpi-data-service` é a API central que serve dados para todas as aplicações.
 
-client = GLPIClient(url="https://glpi.example.com", app_token="seu_token")
-client.init_session(user_token="seu_user_token")
-tickets = client.tickets.list()
+```bash
+cd glpi-data-service
+docker-compose up -d --build
 ```
-
-### 📊 02-analise-dados-glpi  
-**Análise e limpeza de dados de tickets**
-
-- **Dados brutos**: CSVs originais exportados do GLPI
-- **Dados processados**: Arquivos limpos e tratados (XLSX/CSV)
-- **Scripts**: Ferramentas de limpeza e análise
-- **Relatórios**: Métricas e análises geradas
-
-**Arquivo principal:** `data/processed/todos_tickets_limpos_preciso.xlsx`
-
-### 🔄 03-integracao-glpi
-**Integração com banco de dados e sincronização**
-
-- **Banco de dados**: SQLite com schema otimizado
-- **ETL**: Scripts de extração, transformação e carga
-- **Sincronização**: Automação de processos
-
-**Banco principal:** `database/glpi.sqlite`
-
-## 🚀 Começando
-
-1. **Escolha seu projeto**: Cada pasta é independente
-2. **Requisitos**: Veja os requirements específicos de cada projeto
-3. **Documentação**: Cada projeto tem seu próprio README com instruções
-
-## 📋 Status de Organização
-
-✅ **Concluído** - Estrutura reorganizada e limpa  
-✅ **Removidos** - 24 arquivos desnecessários  
-✅ **Organizados** - 3 projetos claramente separados  
-✅ **Documentados** - READMEs específicos para cada projeto
-
-## 🎯 Objetivos Alcançados
-
-- **Separação clara** de responsabilidades entre projetos
-- **Eliminação de duplicatas** e arquivos temporários  
-- **Estrutura profissional** e fácil de navegar
-- **Preservação** de todo o trabalho importante realizado
-
-## 📚 Documentação Adicional
-
-- Veja `REORGANIZACAO_PROJETO.md` para detalhes da reorganização
-- Cada subprojeto tem documentação específica em seu README
-- Documentos técnicos estão em `.trae/documents/`
+*Porta: 8000*
 
 ---
 
-**💡 Dica**: Cada projeto pode ser usado independentemente. O API Atlas fornece acesso programático, a Análise de Dados trabalha com exportes CSV, e a Integração mantém um banco sincronizado.
+### 2. Frontends (Aplicações)
+
+Execute os comandos abaixo em terminais separados ou conforme a necessidade.
+
+#### GLPI Smart Search (Busca Inteligente DTIC)
+```bash
+cd glpi-smart-search
+docker-compose up -d --build
+```
+*Porta: 3003*
+
+#### SIS Smart Search (Busca Inteligente SIS)
+```bash
+cd sis-smart-search
+docker-compose up -d --build
+```
+*Porta: 3004*
+
+#### DTIC Dashboard
+```bash
+cd 06-dtic-dashboard
+docker-compose up -d --build
+```
+*Porta: 3000*
+
+#### SIS Dashboard
+```bash
+cd 06.1-sis-dashboard
+docker-compose up -d --build
+```
+*Porta: 3001*
+
+---
+
+### 🛠️ Scripts Úteis
+
+Na raiz do projeto, existem scripts para facilitar o gerenciamento de todos os serviços de uma vez (Windows PowerShell):
+
+*   **Iniciar Tudo**: `.\start_all.ps1`
+*   **Parar Tudo**: `.\stop_all.ps1`

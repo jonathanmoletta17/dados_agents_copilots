@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: glpi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: glpi_data
+      POSTGRES_USER: glpi_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-glpi_secure_2024}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
+      TZ: America/Sao_Paulo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U glpi_user -d glpi_data" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - glpi-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: glpi-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@localhost.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin-config/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - glpi-network
+
+  glpi-service:
+    build: .
+    container_name: glpi-service
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=glpi_data
+      - POSTGRES_USER=glpi_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-glpi_secure_2024}
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "cau.ppiratini.intra.rs.gov.br:10.72.30.39"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    networks:
+      - glpi-network
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  glpi-network:
+    driver: bridge

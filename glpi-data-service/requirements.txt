@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+requests
+
+# PostgreSQL Support
+psycopg2-binary
+asyncpg
+python-dotenv
+alembic
+pytest
+httpx
+sse-starlette
