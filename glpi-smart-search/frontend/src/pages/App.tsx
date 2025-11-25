@@ -17,9 +17,21 @@ export default function App() {
   const pageSize = 20
 
   useEffect(() => {
-    statsApi(['novo', 'pendente', 'solucionado', 'fechado']).then(setStats).catch(err => {
-      console.error('statsApi failed', err)
-    })
+    const fetchStats = () => {
+      statsApi(['novo', 'pendente', 'solucionado', 'fechado'])
+        .then(setStats)
+        .catch(err => {
+          console.error('statsApi failed', err)
+        })
+    }
+
+    // Initial fetch
+    fetchStats()
+
+    // Poll every 5 seconds for auto-update
+    const interval = setInterval(fetchStats, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
