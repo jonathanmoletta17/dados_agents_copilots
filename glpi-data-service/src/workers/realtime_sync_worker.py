@@ -86,6 +86,7 @@ class RealtimeSyncWorker:
         """Sincronização incremental usando GLPIClient existente."""
         start_time = datetime.now()
         stats = {'novos': 0, 'atualizados': 0, 'sem_mudanca': 0, 'erros': 0}
+        max_date_mod_seen = None  # 🆕 Rastrear maior date_mod processado
         
         try:
             client = self.clients[context]
@@ -93,8 +94,15 @@ class RealtimeSyncWorker:
             
             # Obter último timestamp de sync
             if since is None:
-                last_sync = db_manager.get_sync_meta('last_sync_time')
-                since = datetime.fromisoformat(last_sync) if last_sync else datetime.now() - timedelta(hours=1)
+                last_sync_str = db_manager.get_sync_meta('last_sync_time')
+                if last_sync_str:
+                    since = datetime.fromisoformat(last_sync_str)
+                    logger.info(f"📅 {context}: Usando last_sync do banco: {since}")
+                else:
+                    since = datetime.now() - timedelta(hours=1)
+                    logger.warning(f"⚠️  {context}: Nenhum last_sync encontrado, usando fallback: {since}")
+            
+            logger.info(f"🔄 {context}: Sincronização incremental DESDE: {since}")  # 🆕 Log explícito
             
             # Iniciar sessão GLPI
             with client:
@@ -109,15 +117,23 @@ class RealtimeSyncWorker:
                             # Precisamos transformar para formato do banco
                             ticket_data = self._transform_enriched_ticket(enriched_ticket)
                             
+                            # 🆕 Rastrear maior date_mod visto
+                            ticket_date_mod = ticket_data.get('atualizado_em')
+                            if ticket_date_mod:
+                                if max_date_mod_seen is None or ticket_date_mod > max_date_mod_seen:
+                                    max_date_mod_seen = ticket_date_mod
+                            
                             # Verificar se existe localmente
                             existing = db_manager.get_ticket_by_glpi_id(ticket_data['glpi_id'])
                             
                             if not existing:
                                 db_manager.upsert_ticket(ticket_data)
                                 stats['novos'] += 1
+                                logger.debug(f"➕ {context}: Ticket {ticket_data['glpi_id']} CRIADO")
                             elif existing.ticket_hash != ticket_data['ticket_hash']:
                                 db_manager.upsert_ticket(ticket_data)
                                 stats['atualizados'] += 1
+                                logger.debug(f"🔄 {context}: Ticket {ticket_data['glpi_id']} ATUALIZADO (hash mudou)")
                             else:
                                 stats['sem_mudanca'] += 1
                             
@@ -127,8 +143,11 @@ class RealtimeSyncWorker:
                             logger.error(f"❌ Erro ao processar ticket: {e}")
                             stats['erros'] += 1
                 
-                # Atualizar last_sync_time
-                db_manager.set_sync_meta('last_sync_time', datetime.now().isoformat())
+                # 🆕 Usar maior date_mod visto OU hora atual se nenhum ticket processado
+                # Isso garante que não pulamos tickets modificados durante a execução
+                new_last_sync = max_date_mod_seen if max_date_mod_seen else start_time
+                db_manager.set_sync_meta('last_sync_time', new_last_sync.isoformat())
+                logger.info(f"💾 {context}: Atualizado last_sync_time para: {new_last_sync}")
                 
                 # Registrar no histórico
                 duration = (datetime.now() - start_time).total_seconds()
@@ -156,6 +175,7 @@ class RealtimeSyncWorker:
         except Exception as e:
             logger.error(f"❌ Erro no sync incremental de {context}: {e}")
             raise
+
     
     async def full_sync(self, context: str):
         """Sincronização completa de TODOS os tickets (sem limite de data)."""
@@ -191,10 +211,11 @@ class RealtimeSyncWorker:
             'solucionado_em': self._parse_datetime(enriched.get('DATA_SOLUCAO')),
             'fechado_em': self._parse_datetime(enriched.get('DATA_FECHAMENTO')),
             'url': enriched.get('URL', ''),
-            'is_deleted': False,
+            'is_deleted': bool(enriched.get('IS_DELETED', 0)),  # 🆕 Usar valor real do GLPI
             'sincronizado_em': datetime.utcnow(),
             'versao': 1
         }
+
         
         # Calcular hash
         ticket_data['ticket_hash'] = self.transformer.calculate_ticket_hash(ticket_data)
