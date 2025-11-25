@@ -1,4 +1,4 @@
-import { Lock, CheckCircle2, Clock, AlertCircle, Mail, Activity } from "lucide-react";
+import { Mail, Clock, CheckCircle2, Lock, AlertTriangle, Activity, ArrowRight, Check } from "lucide-react";
 
 interface MetricsCardsProps {
     stats: any;
@@ -13,36 +13,36 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
             id: 'new',
             label: 'Novos',
             icon: Mail,
-            color: 'from-blue-500 to-blue-600',
-            borderColor: 'border-blue-500/30'
+            color: 'from-green-500 to-green-600',
+            borderColor: 'border-green-500/30'
         },
         'processando (atribuído)': {
             id: 'progress',
             label: 'Em andamento',
-            icon: Clock,
+            icon: ArrowRight,
             color: 'from-slate-600 to-slate-700',
             borderColor: 'border-slate-600/30'
         },
         'processando (planejado)': {
             id: 'planned',
             label: 'Planejado',
-            icon: Activity,
+            icon: Clock,
             color: 'from-slate-600 to-slate-700',
             borderColor: 'border-slate-600/30'
         },
         'pendente': {
             id: 'pending',
             label: 'Pendentes',
-            icon: AlertCircle,
+            icon: AlertTriangle,
             color: 'from-yellow-500 to-yellow-600',
             borderColor: 'border-yellow-500/30'
         },
         'solucionado': {
             id: 'resolved',
             label: 'Resolvidos',
-            icon: CheckCircle2,
-            color: 'from-green-500 to-green-600',
-            borderColor: 'border-green-500/30'
+            icon: Check,
+            color: 'from-blue-500 to-blue-600',
+            borderColor: 'border-blue-500/30'
         },
         'fechado': {
             id: 'closed',
@@ -73,7 +73,7 @@ export function MetricsCards({ stats }: MetricsCardsProps) {
     // For consistency with design, we might want to enforce specific order or items
     // But for now, let's render what we have, sorted by importance/design order if possible
 
-    const order = ['closed', 'resolved', 'progress', 'pending', 'new'];
+    const order = ['new', 'pending', 'resolved', 'closed'];
     aggregated.sort((a: any, b: any) => order.indexOf(a.id) - order.indexOf(b.id));
 
     return (

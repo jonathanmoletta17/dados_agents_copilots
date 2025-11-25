@@ -414,6 +414,122 @@ class GLPIClient:
     def get_itil_categories(self) -> List[Dict]:
         return self.make_request('ITILCategory')
     
+    
+    # ==================== CARREGADORES METHODS ====================
+    
+    def get_carregadores(self, is_deleted: int = 0) -> List[Dict]:
+        """
+        Busca todos os carregadores (PluginGenericobjectCarregador) do GLPI.
+        
+       Args:
+            is_deleted: Filtrar por status de exclusão (0 = ativos, 1 = deletados)
+            
+        Returns:
+            Lista de carregadores com seus dados
+        """
+        sync_logger.info(f"Buscando carregadores do GLPI (is_deleted={is_deleted})")
+        
+        try:
+            all_carregadores = []
+            endpoint = "PluginGenericobjectCarregador"
+            start = 0
+            step = 100
+            
+            while True:
+                params = {
+                    "range": f"{start}-{start + step - 1}",
+                    "is_deleted": is_deleted
+                }
+                
+                response = self.make_request(endpoint, params)
+                
+                # GLPI retorna array direto ou vazio
+                if not response:
+                    break
+                    
+                items = response if isinstance(response, list) else []
+                if not items:
+                    break
+                
+                all_carregadores.extend(items)
+                
+                # Se retornou menos que step, não há mais páginas
+                if len(items) < step:
+                    break
+                    
+                start += step
+            
+            sync_logger.info(f"✅ {len(all_carregadores)} carregadores encontrados")
+            return all_carregadores
+            
+        except Exception as e:
+            sync_logger.error(f"❌ Erro ao buscar carregadores: {e}")
+            return []
+    
+    def get_ticket_items(self, ticket_id: int) -> List[Dict]:
+        """
+        Busca items vinculados a um ticket específico.
+        
+        Args:
+            ticket_id: ID do ticket
+            
+        Returns:
+            Lista de items vinculados (cada item tem: id, items_id, itemtype)
+        """
+        endpoint = f"Ticket/{ticket_id}/Item_Ticket"
+        
+        try:
+            response = self.make_request(endpoint)
+            items = response if isinstance(response, list) else []
+            return items
+            
+        except Exception as e:
+            sync_logger.debug(f"Nenhum item vinculado ao ticket {ticket_id}: {e}")
+            return []
+    
+    def get_carregadores_by_ticket(self, ticket_id: int) -> List[Dict]:
+        """
+        Busca carregadores vinculados a um ticket específico.
+        
+        Args:
+            ticket_id: ID do ticket
+            
+        Returns:
+            Lista de carregadores filtrados (apenas itemtype = PluginGenericobjectCarregador)
+        """
+        items = self.get_ticket_items(ticket_id)
+        
+        # Filtrar apenas carregadores
+        carregadores = [
+            item for item in items 
+            if item.get('itemtype') == 'PluginGenericobjectCarregador'
+        ]
+        
+        return carregadores
+    
+    def get_location_name(self, location_id: int) -> Optional[str]:
+        """
+        Busca nome da localização por ID.
+        
+        Args:
+            location_id: ID da localização
+            
+        Returns:
+            Nome da localização ou None
+        """
+        if not location_id:
+            return None
+            
+        try:
+            endpoint = f"Location/{location_id}"
+            response = self.make_request(endpoint)
+            return response.get('name') or response.get('completename')
+        except Exception as e:
+            sync_logger.debug(f"Erro ao buscar localização {location_id}: {e}")
+            return None
+    
+    # ==================== CONTEXT MANAGER ====================
+    
     def __enter__(self):
         self.init_session()
         return self

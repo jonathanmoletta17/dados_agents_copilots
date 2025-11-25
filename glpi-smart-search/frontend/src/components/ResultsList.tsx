@@ -1,6 +1,7 @@
 import { Target, Clock, Building2, Tag, User, Users } from "lucide-react";
 
 export default function ResultsList({ rows, total, pageSize, sort, setSort, page, setPage }: { rows: any[], total: number, pageSize: number, sort: string, setSort: (v: string) => void, page: number, setPage: (n: number) => void }) {
+    const visualStyle: 'cards' | 'grid' | 'zebra' = 'grid'
     const glpiUrl = (id: number) => `http://cau.ppiratini.intra.rs.gov.br/glpi/front/ticket.form.php?id=${id}`
 
     const getStatusStyle = (status: string) => {
@@ -122,90 +123,87 @@ export default function ResultsList({ rows, total, pageSize, sort, setSort, page
                         <p className="text-sm mt-1">Tente ajustar sua busca ou filtros</p>
                     </div>
                 ) : (
-                    rows.map(r => {
+                    rows.map((r, i) => {
                         const hasHighlight = !!(r.highlight && r.highlight.trim())
                         const isNumericTitle = !hasHighlight && r.titulo && String(r.titulo).trim() === String(r.id)
                         const displayTitle = isNumericTitle ? (r.descricao || `Ticket #${r.id}`) : (r.titulo || `Ticket #${r.id}`)
                         const statusDateInfo = getStatusDate(r)
 
+                        const rowBg = visualStyle === 'zebra' ? (i % 2 === 0 ? 'bg-slate-800/25' : 'bg-slate-800/10') : ''
+                        const cellBase = 'space-y-1'
+                        const cellCards = 'rounded-lg border border-slate-600/40 bg-slate-800/40 shadow-sm p-3'
+                        const cellGrid = 'rounded-md border border-slate-700/40 bg-slate-800/20 p-2'
+                        const valueZebra = 'bg-slate-700/30 rounded px-2 py-1'
+                        const cellClass = visualStyle === 'cards' ? `${cellBase} ${cellCards}` : visualStyle === 'grid' ? `${cellBase} ${cellGrid}` : cellBase
+                        const valueClass = visualStyle === 'zebra' ? valueZebra : 'text-sm text-slate-300 truncate'
+
                         return (
                             <div
                                 key={r.id}
                                 onClick={() => window.open(r.url || glpiUrl(r.id), '_blank')}
-                                className="p-6 hover:bg-slate-700/20 transition-colors group cursor-pointer"
+                                className={`p-6 hover:bg-slate-700/20 transition-colors group cursor-pointer ${rowBg}`}
                             >
-                                <div className="flex items-start gap-4">
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                                     <div className="flex-1 space-y-4">
-                                        {/* Header */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg border border-blue-400/30 text-sm">
-                                                #{r.id}
-                                            </div>
-                                            <div className={`px-3 py-1 rounded-lg border text-sm ${getStatusStyle(r.status)}`}>
-                                                {r.status}
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <div className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg border border-blue-400/30 text-sm">#{r.id}</div>
+                                            <div className={`px-3 py-1 rounded-lg border text-sm ${getStatusStyle(r.status)}`}>{r.status}</div>
+                                            <div className="rounded-lg border border-slate-700/40 bg-slate-800/20 px-3 py-2 text-slate-200">
+                                                <span className="text-slate-500 text-xs mr-2 uppercase">Título</span>
+                                                <span className="text-sm">{displayTitle}</span>
                                             </div>
                                         </div>
 
-                                        {/* Title */}
-                                        <div className="text-lg text-slate-200 group-hover:text-white transition-colors">
-                                            <span className="text-slate-500 text-sm mr-2">TÍTULO:</span>
-                                            {displayTitle}
-                                        </div>
-
-                                        {/* Details Grid */}
-                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                                            <div className="space-y-1">
+                                        
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+                                            <div className={cellClass}>
                                                 <div className="text-xs text-slate-500 uppercase flex items-center gap-1">
                                                     <Building2 className="w-3 h-3" />
                                                     Entidade
                                                 </div>
-                                                <div className="text-sm text-slate-300 truncate" title={r.entidade}>{r.entidade || 'N/A'}</div>
+                                                <div className={valueClass} title={r.entidade}>{visualStyle === 'zebra' ? (r.entidade || 'N/A') : <span className="text-sm text-slate-300 truncate">{r.entidade || 'N/A'}</span>}</div>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div className={cellClass}>
                                                 <div className="text-xs text-slate-500 uppercase flex items-center gap-1">
                                                     <Tag className="w-3 h-3" />
                                                     Categoria
                                                 </div>
-                                                <div className="text-sm text-slate-300 truncate" title={r.categoria}>{r.categoria || 'N/A'}</div>
+                                                <div className={valueClass} title={r.categoria}>{visualStyle === 'zebra' ? (r.categoria || 'N/A') : <span className="text-sm text-slate-300 truncate">{r.categoria || 'N/A'}</span>}</div>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div className={cellClass}>
                                                 <div className="text-xs text-slate-500 uppercase flex items-center gap-1">
                                                     <User className="w-3 h-3" />
                                                     Requerente
                                                 </div>
-                                                <div className="text-sm text-slate-300 truncate" title={r.requerente}>{r.requerente || 'N/A'}</div>
+                                                <div className={valueClass} title={r.requerente}>{visualStyle === 'zebra' ? (r.requerente || 'N/A') : <span className="text-sm text-slate-300 truncate">{r.requerente || 'N/A'}</span>}</div>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div className={cellClass}>
                                                 <div className="text-xs text-slate-500 uppercase flex items-center gap-1">
                                                     <User className="w-3 h-3" />
                                                     Técnico
                                                 </div>
-                                                <div className="text-sm text-slate-300 truncate" title={r.tecnico}>{r.tecnico || 'N/A'}</div>
+                                                <div className={valueClass} title={r.tecnico}>{visualStyle === 'zebra' ? (r.tecnico || 'N/A') : <span className="text-sm text-slate-300 truncate">{r.tecnico || 'N/A'}</span>}</div>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div className={cellClass}>
                                                 <div className="text-xs text-slate-500 uppercase flex items-center gap-1">
                                                     <Users className="w-3 h-3" />
                                                     Grupo
                                                 </div>
-                                                <div className="text-sm text-slate-300 truncate" title={r.grupo}>{r.grupo || 'N/A'}</div>
+                                                <div className={valueClass} title={r.grupo}>{visualStyle === 'zebra' ? (r.grupo || 'N/A') : <span className="text-sm text-slate-300 truncate">{r.grupo || 'N/A'}</span>}</div>
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Dates */}
-                                    <div className="text-right space-y-3 shrink-0 min-w-[140px]">
-                                        <div>
-                                            <div className="text-xs text-blue-400 uppercase mb-1">Data Abertura</div>
+                                    <div className="flex flex-col gap-2 md:text-right md:items-end shrink-0 min-w-[180px]">
+                                        <div className="rounded-lg border border-slate-700/40 bg-slate-800/20 px-3 py-2 w-full">
+                                            <div className="text-xs text-blue-400 uppercase">Data Abertura</div>
                                             <div className="text-sm text-slate-300">{formatDateTime(r.data_criacao)}</div>
                                         </div>
-                                        <div>
-                                            <div className={`text-xs uppercase mb-1 ${statusDateInfo.color === 'text-green-400' ? 'text-green-400' : 'text-blue-400'}`}>
-                                                {statusDateInfo.label}
-                                            </div>
+                                        <div className="rounded-lg border border-slate-700/40 bg-slate-800/20 px-3 py-2 w-full">
+                                            <div className={`text-xs uppercase ${statusDateInfo.color === 'text-green-400' ? 'text-green-400' : 'text-blue-400'}`}>{statusDateInfo.label}</div>
                                             <div className="text-sm text-slate-300">{formatDateTime(statusDateInfo.date)}</div>
                                         </div>
                                     </div>

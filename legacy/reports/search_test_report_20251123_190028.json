@@ -1,0 +1,324 @@
+{
+  "timestamp": "2025-11-23T19:00:28.914900",
+  "summary": {
+    "total_tests": 29,
+    "passed": 29,
+    "failed": 0,
+    "success_rate": "100.0%"
+  },
+  "results": [
+    {
+      "test": "DTIC - Busca sem termos",
+      "status": "✅ PASSOU",
+      "details": "Total de tickets: 11080, Retornados: 10",
+      "data": {
+        "total": 11080,
+        "sample_items": 10
+      },
+      "timestamp": "2025-11-23T19:00:27.828066"
+    },
+    {
+      "test": "SIS - Busca sem termos",
+      "status": "✅ PASSOU",
+      "details": "Total de tickets: 4895, Retornados: 10",
+      "data": {
+        "total": 4895,
+        "sample_items": 10
+      },
+      "timestamp": "2025-11-23T19:00:27.860027"
+    },
+    {
+      "test": "SIS - Busca por ID exato",
+      "status": "✅ PASSOU",
+      "details": "Buscando ID 4228, encontrado: True",
+      "data": {
+        "searched_id": 4228,
+        "found_items": 1
+      },
+      "timestamp": "2025-11-23T19:00:27.947035"
+    },
+    {
+      "test": "SIS - Busca por ID parcial",
+      "status": "✅ PASSOU",
+      "details": "Buscando parte do ID 422, encontrado: True",
+      "data": {
+        "searched_partial": "422",
+        "found_items": 15
+      },
+      "timestamp": "2025-11-23T19:00:28.001662"
+    },
+    {
+      "test": "SIS - Busca por 'TESTE'",
+      "status": "✅ PASSOU",
+      "details": "Encontrados 5 tickets, termo localizado: True",
+      "data": {
+        "termo": "TESTE",
+        "encontrados": 5,
+        "termo_localizado": true
+      },
+      "timestamp": "2025-11-23T19:00:28.058039"
+    },
+    {
+      "test": "SIS - Busca por 'ERRO'",
+      "status": "✅ PASSOU",
+      "details": "Encontrados 4 tickets, termo localizado: True",
+      "data": {
+        "termo": "ERRO",
+        "encontrados": 4,
+        "termo_localizado": true
+      },
+      "timestamp": "2025-11-23T19:00:28.114963"
+    },
+    {
+      "test": "SIS - Busca por 'SISTEMA'",
+      "status": "✅ PASSOU",
+      "details": "Encontrados 4 tickets, termo localizado: True",
+      "data": {
+        "termo": "SISTEMA",
+        "encontrados": 4,
+        "termo_localizado": true
+      },
+      "timestamp": "2025-11-23T19:00:28.171192"
+    },
+    {
+      "test": "SIS - Busca por 'ACESSO'",
+      "status": "✅ PASSOU",
+      "details": "Encontrados 5 tickets, termo localizado: True",
+      "data": {
+        "termo": "ACESSO",
+        "encontrados": 5,
+        "termo_localizado": true
+      },
+      "timestamp": "2025-11-23T19:00:28.227293"
+    },
+    {
+      "test": "SIS - Busca por 'IMPRESSORA'",
+      "status": "✅ PASSOU",
+      "details": "Encontrados 5 tickets, termo localizado: True",
+      "data": {
+        "termo": "IMPRESSORA",
+        "encontrados": 5,
+        "termo_localizado": true
+      },
+      "timestamp": "2025-11-23T19:00:28.285450"
+    },
+    {
+      "test": "SIS - Filtro entidade 'CASA CIVIL'",
+      "status": "✅ PASSOU",
+      "details": "Total: 75, Todos corretos: True",
+      "data": {
+        "total": 75,
+        "amostra": 20,
+        "todos_corretos": true
+      },
+      "timestamp": "2025-11-23T19:00:28.311984"
+    },
+    {
+      "test": "SIS - Filtro status 'novo'",
+      "status": "✅ PASSOU",
+      "details": "Total: 6, Todos corretos: True",
+      "data": {
+        "status": "novo",
+        "total": 6,
+        "amostra": 6,
+        "todos_corretos": true
+      },
+      "timestamp": "2025-11-23T19:00:28.328661"
+    },
+    {
+      "test": "SIS - Filtro status 'pendente'",
+      "status": "✅ PASSOU",
+      "details": "Total: 10, Todos corretos: True",
+      "data": {
+        "status": "pendente",
+        "total": 10,
+        "amostra": 10,
+        "todos_corretos": true
+      },
+      "timestamp": "2025-11-23T19:00:28.345881"
+    },
+    {
+      "test": "SIS - Filtro status 'solucionado'",
+      "status": "✅ PASSOU",
+      "details": "Total: 0, Todos corretos: False",
+      "data": {
+        "status": "solucionado",
+        "total": 0,
+        "amostra": 0,
+        "todos_corretos": false
+      },
+      "timestamp": "2025-11-23T19:00:28.361831"
+    },
+    {
+      "test": "SIS - Busca combinada",
+      "status": "✅ PASSOU",
+      "details": "Total: 0, Todos critérios atendidos: True",
+      "data": {
+        "total": 0,
+        "amostra": 0,
+        "todos_criterios": true
+      },
+      "timestamp": "2025-11-23T19:00:28.382260"
+    },
+    {
+      "test": "SIS - Case insensitive 'teste'",
+      "status": "✅ PASSOU",
+      "details": "Resultados: 20",
+      "data": {
+        "variacao": "teste",
+        "total": 20
+      },
+      "timestamp": "2025-11-23T19:00:28.437996"
+    },
+    {
+      "test": "SIS - Case insensitive 'TESTE'",
+      "status": "✅ PASSOU",
+      "details": "Resultados: 20",
+      "data": {
+        "variacao": "TESTE",
+        "total": 20
+      },
+      "timestamp": "2025-11-23T19:00:28.494560"
+    },
+    {
+      "test": "SIS - Case insensitive 'Teste'",
+      "status": "✅ PASSOU",
+      "details": "Resultados: 20",
+      "data": {
+        "variacao": "Teste",
+        "total": 20
+      },
+      "timestamp": "2025-11-23T19:00:28.550493"
+    },
+    {
+      "test": "SIS - Case insensitive 'TeStE'",
+      "status": "✅ PASSOU",
+      "details": "Resultados: 20",
+      "data": {
+        "variacao": "TeStE",
+        "total": 20
+      },
+      "timestamp": "2025-11-23T19:00:28.614951"
+    },
+    {
+      "test": "SIS - Paginação",
+      "status": "✅ PASSOU",
+      "details": "Página 1: 5 itens, Página 2: 5 itens, Diferentes: True",
+      "data": {
+        "pagina1": 5,
+        "pagina2": 5,
+        "diferentes": true
+      },
+      "timestamp": "2025-11-23T19:00:28.729171"
+    },
+    {
+      "test": "SIS - Estatísticas",
+      "status": "✅ PASSOU",
+      "details": "Status: 5, Categorias: 10",
+      "data": {
+        "status_count": 5,
+        "categoria_count": 10
+      },
+      "timestamp": "2025-11-23T19:00:28.747840"
+    },
+    {
+      "test": "SIS - Sugestão entidade 'CASA'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 3",
+      "data": {
+        "campo": "entidade",
+        "prefixo": "CASA",
+        "sugestoes": 3
+      },
+      "timestamp": "2025-11-23T19:00:28.767694"
+    },
+    {
+      "test": "SIS - Sugestão entidade 'IMP'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 0",
+      "data": {
+        "campo": "entidade",
+        "prefixo": "IMP",
+        "sugestoes": 0
+      },
+      "timestamp": "2025-11-23T19:00:28.786280"
+    },
+    {
+      "test": "SIS - Sugestão entidade 'JO'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 1",
+      "data": {
+        "campo": "entidade",
+        "prefixo": "JO",
+        "sugestoes": 1
+      },
+      "timestamp": "2025-11-23T19:00:28.804296"
+    },
+    {
+      "test": "SIS - Sugestão categoria 'CASA'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 0",
+      "data": {
+        "campo": "categoria",
+        "prefixo": "CASA",
+        "sugestoes": 0
+      },
+      "timestamp": "2025-11-23T19:00:28.825755"
+    },
+    {
+      "test": "SIS - Sugestão categoria 'IMP'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 10",
+      "data": {
+        "campo": "categoria",
+        "prefixo": "IMP",
+        "sugestoes": 10
+      },
+      "timestamp": "2025-11-23T19:00:28.843695"
+    },
+    {
+      "test": "SIS - Sugestão categoria 'JO'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 2",
+      "data": {
+        "campo": "categoria",
+        "prefixo": "JO",
+        "sugestoes": 2
+      },
+      "timestamp": "2025-11-23T19:00:28.861627"
+    },
+    {
+      "test": "SIS - Sugestão tecnico 'CASA'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 0",
+      "data": {
+        "campo": "tecnico",
+        "prefixo": "CASA",
+        "sugestoes": 0
+      },
+      "timestamp": "2025-11-23T19:00:28.879630"
+    },
+    {
+      "test": "SIS - Sugestão tecnico 'IMP'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 0",
+      "data": {
+        "campo": "tecnico",
+        "prefixo": "IMP",
+        "sugestoes": 0
+      },
+      "timestamp": "2025-11-23T19:00:28.896337"
+    },
+    {
+      "test": "SIS - Sugestão tecnico 'JO'",
+      "status": "✅ PASSOU",
+      "details": "Sugestões: 2",
+      "data": {
+        "campo": "tecnico",
+        "prefixo": "JO",
+        "sugestoes": 2
+      },
+      "timestamp": "2025-11-23T19:00:28.914285"
+    }
+  ]
+}

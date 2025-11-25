@@ -69,13 +69,11 @@ class RealtimeSyncWorker:
                 db_manager = self.db_managers[context]
                 local_count = db_manager.count_tickets({'is_deleted': False})
                 
-                # Configuração de lookback
-                lookback_days = config.SYNC_FULL_DAYS_LOOKBACK
-                logger.info(f"📊 {context.upper()}: Local={local_count} (Lookback configurado: {lookback_days} dias)")
+                logger.info(f"📊 {context.upper()}: Local={local_count}")
                 
                 # Se banco vazio, fazer sync completo
                 if local_count == 0:
-                    logger.info(f"🔄 {context}: Banco vazio - executando SYNC COMPLETO ({lookback_days} dias)")
+                    logger.info(f"🔄 {context}: Banco vazio - executando SYNC COMPLETO (todos os tickets)")
                     await self.full_sync(context)
                 else:
                     logger.info(f"⚡ {context}: Executando SYNC INCREMENTAL")
@@ -160,9 +158,10 @@ class RealtimeSyncWorker:
             raise
     
     async def full_sync(self, context: str):
-        """Sincronização completa (últimos N dias)."""
-        logger.info(f"🔄 Iniciando sync COMPLETO para {context}...")
-        since = datetime.now() - timedelta(days=config.SYNC_FULL_DAYS_LOOKBACK)
+        """Sincronização completa de TODOS os tickets (sem limite de data)."""
+        logger.info(f"🔄 Iniciando sync COMPLETO para {context} (TODOS os tickets)...")
+        # Use uma data muito antiga para garantir que todos os tickets sejam incluídos
+        since = datetime(2000, 1, 1)
         await self.incremental_sync(context, since)
     
     def _transform_enriched_ticket(self, enriched: Dict) -> Dict:
@@ -256,80 +255,86 @@ class RealtimeSyncWorker:
             db_manager = self.db_managers[context]
             
             # 1. Sync Carregadores
-            # Fetch all Carregadores (assuming < 1000)
-            carregadores = client.make_request("PluginGenericobjectCarregador", {"range": "0-1000", "expand_dropdowns": "true"})
-            logger.info(f"📊 {context}: Encontrados {len(carregadores)} carregadores no GLPI.")
-            
-            with db_manager.get_session() as session:
-                for c in carregadores:
-                    loc_val = c.get('locations_id', 0)
-                    loc_id = loc_val if isinstance(loc_val, int) else 0
-                    loc_name = str(loc_val) if not isinstance(loc_val, int) else ''
-                    
-                    user_val = c.get('users_id', 0)
-                    user_id = user_val if isinstance(user_val, int) else 0
-                    user_name = str(user_val) if not isinstance(user_val, int) else ''
-                    
-                    carregador = Carregador(
-                        id=c.get('id'),
-                        name=c.get('name'),
-                        locations_id=loc_id,
-                        location_name=loc_name,
-                        users_id=user_id,
-                        user_name=user_name,
-                        is_deleted=c.get('is_deleted', 0),
-                        date_mod=self._parse_datetime(c.get('date_mod')),
-                        date_creation=self._parse_datetime(c.get('date_creation')),
-                        sincronizado_em=datetime.utcnow()
-                    )
-                    session.merge(carregador)
-                session.commit() # Commit carregadores first
-            
-            # 2. Sync Links
-            # Search Tickets with itemtype = PluginGenericobjectCarregador
-            params = {
-                "criteria[0][field]": 131,
-                "criteria[0][searchtype]": "equals",
-                "criteria[0][value]": "PluginGenericobjectCarregador",
-                "forcedisplay[0]": 13, # Items ID
-                "forcedisplay[1]": 131, # Item Type
-                "range": "0-1000"
-            }
-            
-            tickets_data = client.make_request("search/Ticket", params)
-            tickets = tickets_data.get('data', [])
-            logger.info(f"🔗 {context}: Encontrados {len(tickets)} tickets vinculados a carregadores.")
-            
-            with db_manager.get_session() as session:
-                # Clear existing links
-                deleted = session.query(CarregadorTicket).delete()
-                logger.info(f"🗑️ {context}: Removidos {deleted} vínculos antigos.")
+            with client:
+                # Fetch all Carregadores (assuming < 1000)
+                carregadores = client.make_request("PluginGenericobjectCarregador", {"range": "0-1000", "expand_dropdowns": "true"})
+                logger.info(f"📊 {context}: Encontrados {len(carregadores)} carregadores no GLPI.")
                 
-                links_count = 0
-                for t in tickets:
-                    tid = t.get('2') or t.get(2)
-                    items_ids = t.get('13') or t.get(13)
-                    item_types = t.get('131') or t.get(131)
-                    
-                    if items_ids and item_types:
-                        if not isinstance(items_ids, list): items_ids = [items_ids]
-                        if not isinstance(item_types, list): item_types = [item_types]
+                with db_manager.get_session() as session:
+                    for c in carregadores:
+                        loc_val = c.get('locations_id', 0)
+                        loc_id = loc_val if isinstance(loc_val, int) else 0
+                        loc_name = str(loc_val) if not isinstance(loc_val, int) else ''
                         
-                        for i, item_id in enumerate(items_ids):
-                            if i < len(item_types) and item_types[i] == 'PluginGenericobjectCarregador':
-                                link = CarregadorTicket(
-                                    tickets_id=int(tid),
-                                    items_id=int(item_id),
-                                    itemtype='PluginGenericobjectCarregador',
-                                    sincronizado_em=datetime.utcnow()
-                                )
-                                session.add(link)
-                                links_count += 1
+                        user_val = c.get('users_id', 0)
+                        user_id = user_val if isinstance(user_val, int) else 0
+                        user_name = str(user_val) if not isinstance(user_val, int) else ''
+                        
+                        carregador = Carregador(
+                            id=c.get('id'),
+                            name=c.get('name'),
+                            locations_id=loc_id,
+                            location_name=loc_name,
+                            users_id=user_id,
+                            user_name=user_name,
+                            is_deleted=c.get('is_deleted', 0),
+                            date_mod=self._parse_datetime(c.get('date_mod')),
+                            date_creation=self._parse_datetime(c.get('date_creation')),
+                            sincronizado_em=datetime.utcnow()
+                        )
+                        session.merge(carregador)
+                    session.commit() # Commit carregadores first
                 
-                session.commit()
-                logger.info(f"✅ {context}: Inseridos {links_count} novos vínculos.")
-            
-            logger.info(f"✅ {context}: Carregadores sincronizados com sucesso.")
+                # 2. Sync Links
+                # Search Tickets with itemtype = PluginGenericobjectCarregador
+                params = {
+                    "criteria[0][field]": 131,
+                    "criteria[0][searchtype]": "equals",
+                    "criteria[0][value]": "PluginGenericobjectCarregador",
+                    "forcedisplay[0]": 13, # Items ID
+                    "forcedisplay[1]": 131, # Item Type
+                    "range": "0-1000"
+                }
+                
+                logger.info(f"🔍 {context}: Buscando tickets com carregadores...")
+                tickets_data = client.make_request("search/Ticket", params)
+                tickets = tickets_data.get('data', [])
+                logger.info(f"🔗 {context}: Encontrados {len(tickets)} tickets vinculados a carregadores.")
+                
+                with db_manager.get_session() as session:
+                    # Clear existing links
+                    deleted = session.query(CarregadorTicket).delete()
+                    logger.info(f"🗑️ {context}: Removidos {deleted} vínculos antigos.")
+                    
+                    links_count = 0
+                    for t in tickets:
+                        tid = t.get('2') or t.get(2)
+                        items_ids = t.get('13') or t.get(13)
+                        item_types = t.get('131') or t.get(131)
+                        
+                        # Debug log for first few tickets
+                        if links_count < 3:
+                            logger.info(f"🐛 Debug Ticket {tid}: Items={items_ids}, Types={item_types}")
+
+                        if items_ids and item_types:
+                            if not isinstance(items_ids, list): items_ids = [items_ids]
+                            if not isinstance(item_types, list): item_types = [item_types]
+                            
+                            for i, item_id in enumerate(items_ids):
+                                if i < len(item_types) and item_types[i] == 'PluginGenericobjectCarregador':
+                                    link = CarregadorTicket(
+                                        tickets_id=int(tid),
+                                        items_id=int(item_id),
+                                        itemtype='PluginGenericobjectCarregador',
+                                        sincronizado_em=datetime.utcnow()
+                                    )
+                                    session.add(link)
+                                    links_count += 1
+                    
+                    session.commit()
+                    logger.info(f"✅ {context}: Inseridos {links_count} novos vínculos.")
+                
+                logger.info(f"✅ {context}: Carregadores sincronizados com sucesso.")
 
         except Exception as e:
             logger.error(f"❌ Erro ao sincronizar carregadores: {e}")

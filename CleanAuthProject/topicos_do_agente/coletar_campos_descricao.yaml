@@ -1,0 +1,79 @@
+kind: AdaptiveDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: descricao
+
+modelDescription: Extracao via Prompt (JSON)
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: SetVariable
+      id: setVariable_DqeR8a
+      variable: Topic.categorias
+      value: "[   {     \"Title\": \"EMAIL\",     \"Content\": \"id=2; keywords: e-mail, outlook, envio, recebimento, anexo, assinatura, caixa cheia, erro 0x, smtp.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"NOVO USUÁRIO\",     \"Content\": \"id=3; keywords: criar usuário, onboarding, nova conta, inclusão, AD, e-mail novo, credenciais.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"CAIXA COMPARTILHADA\",     \"Content\": \"id=4; keywords: mailbox compartilhada, delegação, permissão, acesso caixa, compartilhar e-mail.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"EXCLUSÃO\",     \"Content\": \"id=6; keywords: desativar, excluir, remover acesso, baixa, inativar, offboarding.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"INSTALAÇÃO DE SOFTWARE\",     \"Content\": \"id=8; keywords: instalar, software, aplicativo, teams, webex, plug-in, antivírus, licenciamento.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"TÚNEL PROCERGS\",     \"Content\": \"id=11; keywords: vpn, túnel, procergs, conexão remota, não conecta, erro vpn.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"FPE\",     \"Content\": \"id=13; keywords: fpe, sistema fpe, acesso, perfil, erro, login.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"IMPRESSORA\",     \"Content\": \"id=14; keywords: impressora, impressão, spooler, toner, papel, fila, scanner.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"SOE\",     \"Content\": \"id=16; keywords: soe, sistema soe, acesso, erro, perfil, consulta.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"PROA\",     \"Content\": \"id=17; keywords: proa, sistema proa, acesso, erro, perfil, login.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"INFRAESTRUTURA\",     \"Content\": \"id=18; keywords: rede, cabeamento, energia, link, switch, rack, wifi.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"EMPRESTIMO\",     \"Content\": \"id=19; keywords: empréstimo, equipamentos, notebook, periféricos, retirada, devolução.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"OFFICE 365\",     \"Content\": \"id=20; keywords: office 365, teams, excel, word, onedrive, sharepoint, licença.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"REDE\",     \"Content\": \"id=21; keywords: internet, rede, conexão, wifi, cabeada, dns, ping, latência.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"LIBERAÇÃO DE ACESSO\",     \"Content\": \"id=22; keywords: liberar acesso, permissão, pasta, drive U, sharepoint, site, firewall.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"ALTERAR PLANO / LICENÇA\",     \"Content\": \"id=23; keywords: licença, plano, E3, E5, upgrade, downgrade, assinatura.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"RESET DE SENHA\",     \"Content\": \"id=24; keywords: senha, reset, redefinição, expirada, esqueceu, troca.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"INSTALAÇÃO DE EQUIPAMENTOS\",     \"Content\": \"id=25; keywords: instalação, equipamentos, montagem, posição, estação, voip, tela.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"REMOVER DE GRUPO\",     \"Content\": \"id=30; keywords: remover, grupo, AD, azure, sharepoint, lista, teams.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"ADICIONAR A GRUPO\",     \"Content\": \"id=31; keywords: adicionar, grupo, AD, azure, sharepoint, lista, teams.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"ATUALIZAR DADOS\",     \"Content\": \"id=32; keywords: atualizar dados, cadastro, telefone, e-mail, display name, perfil.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"CRIAR EQUIPE SHAREPOINT\",     \"Content\": \"id=36; keywords: criar equipe, sharepoint, site, time, permissões, provisionar.\",     \"ContentLocation\": \"about:blank\"   },   {     \"Title\": \"ATENDIMENTO AO USUÁRIO (fallback)\",     \"Content\": \"id=34; keywords: atendimento, suporte, outros, genérico, telefone, voip, hardware, office 365.\",     \"ContentLocation\": \"about:blank\"   }   ]"
+
+    - kind: InvokeAIBuilderModelAction
+      id: invokeAIBuilderModelAction_LmHaV4
+      input:
+        binding:
+          categorias: =Topic.categorias
+          descricao: =Topic.descricao
+          fallback_id: "34"
+
+      output:
+        binding:
+          predictionOutput: Topic.exractRaw
+
+      aIModelId: 0cfefb92-3fe7-41e6-9152-ded56b017e26
+
+    - kind: ParseValue
+      id: F32PzX
+      variable: Topic.extractRec
+      valueType:
+        kind: Record
+        properties:
+          category_id: Number
+          rewritten_description: String
+          title: String
+
+      value: =Topic.exractRaw.structuredOutput
+
+    - kind: SetVariable
+      id: setVariable_pd2JQ7
+      variable: Topic.out_title
+      value: =Text(Topic.extractRec.title)
+
+    - kind: SetVariable
+      id: setVariable_LuuQPd
+      variable: Topic.out_description
+      value: =Text(Topic.extractRec.rewritten_description)
+
+    - kind: SetVariable
+      id: setVariable_8mncOW
+      variable: Topic.out_category_id
+      value: =Value(Topic.extractRec.category_id)
+
+    - kind: EndDialog
+      id: end
+
+inputType:
+  properties:
+    descricao:
+      displayName: descricao
+      type: String
+
+outputType:
+  properties:
+    out_category_id:
+      displayName: out_category_id
+      type: Number
+
+    out_description:
+      displayName: out_description
+      type: String
+
+    out_title:
+      displayName: out_title
+      type: String

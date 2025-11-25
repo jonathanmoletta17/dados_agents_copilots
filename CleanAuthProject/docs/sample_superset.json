@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "session_token": "SESSION_TOKEN_EXEMPLO",
+  "login": "jonathan-moletta",
+  "user_id": 1234,
+  "email": "user@example.com",
+  "code": null,
+  "message": null
+}

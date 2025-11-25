@@ -17,7 +17,8 @@ export function exportUrl(params: Record<string, any>, format: 'csv' | 'xlsx') {
   return `${BASE}/v1/dtic/search/export?${usp.toString()}`
 }
 
-export async function statsApi() {
-  const r = await axios.get(`${BASE}/v1/dtic/search/stats`)
+export async function statsApi(order?: string[]) {
+  const params = order && order.length ? { order: order.join(',') } : undefined
+  const r = await axios.get(`${BASE}/v1/dtic/search/stats`, { params })
   return r.data
 }

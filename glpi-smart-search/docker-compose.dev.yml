@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/Dockerfile.dev
+    container_name: glpi-search-frontend-dev
+    ports:
+      - "3003:3003"
+    environment:
+      - VITE_API_URL=http://glpi-service-dev:8000
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - glpi-network
+
+networks:
+  glpi-network:
+    name: glpi-data-service_glpi-network
+    external: true

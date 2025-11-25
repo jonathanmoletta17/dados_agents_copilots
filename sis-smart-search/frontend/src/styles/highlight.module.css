@@ -1,0 +1,12 @@
+.highlight {
+  background-color: #ffd70080; /* Amarelo vibrante com 50% transparência */
+  color: #1a1a1a; /* Texto escuro para contraste */
+  font-weight: 600; /* Semi-negrito para destaque */
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.highlight:hover {
+  background-color: #ffd700; /* Amarelo sólido no hover */
+}

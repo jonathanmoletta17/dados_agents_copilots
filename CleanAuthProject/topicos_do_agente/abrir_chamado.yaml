@@ -1,0 +1,283 @@
+kind: AdaptiveDialog
+modelDescription: |-
+  tópico deve ser acionado quando houver a necessidade de iniciar a abertura de um chamado no sistema, garantindo que todas as etapas essenciais sejam executadas de forma integrada. Ele centraliza processos relacionados, como:
+
+  Autenticação do usuário para validar permissões.
+  Extração automática de campos a partir da descrição fornecida pelo usuário (ex.: título, categoria, prioridade).
+  Registro inicial do chamado com os dados estruturados.
+
+  Critérios para Ativação
+
+  O usuário solicita abrir um chamado, criar ticket, registrar ocorrência ou termos equivalentes.
+  A interação envolve coleta de informações (descrição, categoria, urgência) para compor o chamado.
+  Pode incluir etapas complementares, como validação de identidade ou preenchimento automático de dados.
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: BeginDialog
+      id: 0ARKbh
+      input: {}
+      dialog: cr4b8_cauTicketsGlpi.topic.AutenticarusuarionoGLPI
+      output:
+        binding:
+          out_auth_status: Topic.out_auth_status
+          out_email: Topic.out_email
+          out_login: Topic.out_login
+          out_session_token: Topic.out_session_token
+          out_user_id: Topic.out_user_id
+
+    - kind: SetVariable
+      id: setVariable_2uQsVB
+      variable: Topic.user_display
+      value: =Coalesce(Topic.out_login, Topic.out_email)
+
+    - kind: Question
+      id: question_3ne3Xj
+      interruptionPolicy:
+        allowInterruption: true
+
+      variable: init:Topic.descricao
+      prompt: ✅ Autenticado como {Topic.user_display}. Agora descreva seu problema…
+      entity: StringPrebuiltEntity
+
+    - kind: BeginDialog
+      id: j061xX
+      input:
+        binding:
+          descricao: =Topic.descricao
+
+      dialog: cr4b8_cauTicketsGlpi.topic.Extraircamposdoticket
+      output:
+        binding:
+          out_category_id: Topic.out_category_id
+          out_description: Topic.out_description
+          out_title: Topic.out_title
+
+    - kind: SetVariable
+      id: setVariable_Sj7OHn
+      variable: Topic.Title
+      value: =Text(Topic.out_title)
+
+    - kind: SetVariable
+      id: setVariable_VbtZj9
+      variable: Topic.Description
+      value: =Text(Topic.out_description)
+
+    - kind: SetVariable
+      id: setVariable_a3A4Jo
+      variable: Topic.Category_id
+      value: =Value(Topic.out_category_id)
+
+    - kind: SetVariable
+      id: setVariable_vpZLmG
+      variable: Topic.Requester_user_id
+      value: =If(IsBlank(Topic.out_user_id), Blank(), Value(Topic.out_user_id))
+
+    - kind: SetVariable
+      id: setVariable_vqg08l
+      variable: Topic.Session_token
+      value: =Text(Topic.out_session_token)
+
+    - kind: SetVariable
+      id: setVariable_iIz5Cu
+      variable: Topic.category_map_json
+      value: "[  {\"id\":2,\"name\":\"EMAIL\"},  {\"id\":3,\"name\":\"NOVO USUÁRIO\"},  {\"id\":4,\"name\":\"CAIXA COMPARTILHADA\"},  {\"id\":6,\"name\":\"EXCLUSÃO\"},  {\"id\":8,\"name\":\"INSTALAÇÃO DE SOFTWARE\"},  {\"id\":11,\"name\":\"TÚNEL PROCERGS\"},  {\"id\":13,\"name\":\"FPE\"},  {\"id\":14,\"name\":\"IMPRESSORA\"},  {\"id\":16,\"name\":\"SOE\"},  {\"id\":17,\"name\":\"PROA\"},  {\"id\":18,\"name\":\"INFRAESTRUTURA\"},  {\"id\":19,\"name\":\"EMPRESTIMO\"},  {\"id\":20,\"name\":\"OFFICE 365\"},  {\"id\":21,\"name\":\"REDE\"},  {\"id\":22,\"name\":\"LIBERAÇÃO DE ACESSO\"},  {\"id\":23,\"name\":\"ALTERAR PLANO / LICENÇA\"},  {\"id\":24,\"name\":\"RESET DE SENHA\"},  {\"id\":25,\"name\":\"INSTALAÇÃO DE EQUIPAMENTOS\"},  {\"id\":30,\"name\":\"REMOVER DE GRUPO\"},  {\"id\":31,\"name\":\"ADICIONAR A GRUPO\"},  {\"id\":32,\"name\":\"ATUALIZAR DADOS\"},  {\"id\":36,\"name\":\"CRIAR EQUIPE SHAREPOINT\"},  {\"id\":34,\"name\":\"ATENDIMENTO AO USUÁRIO (fallback)\"} ]"
+
+    - kind: ParseValue
+      id: 4qorb2
+      variable: Topic.category_tab
+      valueType:
+        kind: Table
+        properties:
+          id: Number
+          name: String
+
+      value: =Topic.category_map_json
+
+    - kind: SetVariable
+      id: setVariable_duz5f1
+      variable: Topic.category_label
+      value: |
+        =With(
+          {
+            cid: Value(Topic.Category_id),
+            rec: LookUp(Topic.category_tab, id = Value(Topic.Category_id))
+          },
+          If(
+            IsBlank(rec),
+            "ID " & Text(cid),
+            Text(rec.name)
+          )
+        )
+
+    - kind: AdaptiveCardPrompt
+      id: 9NjHbW
+      interruptionPolicy:
+        allowInterruption: false
+
+      card: |-
+        ={
+          '$schema': "https://adaptivecards.io/schemas/adaptive-card.json",
+          type: "AdaptiveCard",
+          version: "1.5",
+          body: [
+            {
+              type: "TextBlock",
+              text: "Resumo do chamado",
+              size: "Large",
+              weight: "Bolder"
+            },
+            {
+              type: "FactSet",
+              facts: [
+                {
+                  title: "Solicitante",
+                  value: Topic.user_display
+                },
+                {
+                  title: "Título",
+                  value: Topic.Title
+                },
+                {
+                  title: "Categoria",
+                  value: Topic.category_label
+                }
+              ]
+            },
+            {
+              type: "TextBlock",
+              text: Topic.Description,
+              wrap: true
+            }
+          ],
+          actions: [
+            {
+              type: "Action.Submit",
+              title: "Confirmar e abrir",
+              data: {
+                action: "confirm"
+              }
+            },
+            {
+              type: "Action.Submit",
+              title: "Cancelar",
+              data: {
+                action: "cancel"
+              }
+            }
+          ]
+        }
+      output:
+        binding:
+          action: Topic.action
+          actionSubmitId: Topic.actionSubmitId
+
+      outputType:
+        properties:
+          action: String
+          actionSubmitId: String
+
+    - kind: ConditionGroup
+      id: conditionGroup_ngycrs
+      conditions:
+        - id: conditionItem_kUJuBt
+          condition: =Topic.action = "confirm"
+          actions:
+            - kind: HttpRequestAction
+              id: 2HX7YT
+              method: Post
+              url: ="https://rubber-professional-cas-enforcement.trycloudflare.com/api/create-ticket"
+              headers:
+                Content-Type: application/json
+                Session-Token: =Text(Topic.Session_token)
+
+              body:
+                kind: JsonRequestContent
+                content: |
+                  ={
+                    title: Topic.Title,
+                    description: Topic.Description,
+                    category_id: Topic.Category_id,
+                    requester_user_id: If(IsBlank(Topic.Requester_user_id), Blank(), Topic.Requester_user_id),
+                    type: 1,
+                    status: 2
+                  }
+
+              response: Topic.httpResp
+              responseSchema: Any
+
+            - kind: ParseValue
+              id: xjy7ep
+              variable: Topic.createRec
+              valueType:
+                kind: Record
+                properties:
+                  input:
+                    type:
+                      kind: Record
+                      properties:
+                        content: String
+                        itilcategories_id: Number
+                        name: String
+                        status: Number
+                        type: Number
+                        users_id_recipient: Number
+
+                  message: String
+                  status: String
+                  ticket_id: Number
+
+              value: =Topic.httpResp
+
+            - kind: SendActivity
+              id: sendActivity_q7iDpI
+              activity:
+                text:
+                  - abrir chamad
+                attachments:
+                  - kind: AdaptiveCardTemplate
+                    cardContent: |
+                      ={
+                        '$schema': "https://adaptivecards.io/schemas/adaptive-card.json",
+                        type: "AdaptiveCard",
+                        version: "1.5",
+                        body: [
+                          { type: "TextBlock", text: "Chamado criado", size: "Large", weight: "Bolder" },
+                          {
+                            type: "FactSet",
+                            facts: [
+                              { title: "Ticket", value: If(IsBlank(Topic.createRec.ticket_id), "—", Text(Topic.createRec.ticket_id)) },
+                              { title: "Solicitante", value: Coalesce(Text(Topic.out_login), Text(Topic.out_email)) },
+                              { title: "Título", value: Topic.Title },
+                              { title: "Categoria", value: Topic.category_label }
+                            ]
+                          },
+                          { type: "TextBlock", text: Topic.Description, wrap: true }
+                        ],
+                        actions: [
+                          // Se você tiver a URL do GLPI, monte-a aqui
+                          // { type: "Action.OpenUrl", title: "Abrir no GLPI", url: "https://seu-glpi/ticket/" & Text(Topic.createRec.ticket_id) },
+                          { type: "Action.Submit", title: "Ok", data: { action: "close" } }
+                        ]
+                      }
+
+            - kind: EndDialog
+              id: z55mVZ
+
+        - id: conditionItem_R5gsPv
+          condition: =Topic.action = "cancel"
+          actions:
+            - kind: SendActivity
+              id: sendActivity_ptJG6r
+              activity: Cancelado pelo usuário
+
+            - kind: EndDialog
+              id: EX9kaE
+
+    - kind: EndDialog
+      id: cyJwT0
+
+inputType: {}
+outputType: {}

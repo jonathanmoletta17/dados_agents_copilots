@@ -1,7 +1,8 @@
 import { X } from "lucide-react";
 
 export default function FilterChips({ filters, onRemove }: { filters: Record<string, any>, onRemove: (k: string) => void }) {
-  const entries = Object.entries(filters).filter(([_, v]) => v !== '' && v !== undefined && v !== null)
+  const entries = Object.entries(filters)
+    .filter(([k, v]) => v !== '' && v !== undefined && v !== null && k !== 'entidadeId')
 
   if (entries.length === 0) return null
 
@@ -9,6 +10,7 @@ export default function FilterChips({ filters, onRemove }: { filters: Record<str
     const labels: Record<string, string> = {
       status: 'Status',
       entidade: 'Entidade',
+      entidadeId: 'Entidade',
       categoria: 'Categoria',
       tecnico: 'Técnico',
       grupo: 'Grupo',

@@ -24,17 +24,32 @@ export default function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      searchApi({ q, ...filters, page, size: pageSize, sort }).then(data => {
+      const params: Record<string, any> = { ...filters, page, size: pageSize, sort }
+      const qTrim = (q || '').trim()
+      if (qTrim.length > 0) params.q = qTrim
+      searchApi(params).then(data => {
         setResults(data.items || []);
         setTotal(data.total);
-      }).catch(err => {
+      }).catch(async err => {
         console.error('sis searchApi failed', err);
-        setResults([]);
-        setTotal(0);
+        try {
+          await new Promise(r => setTimeout(r, 300))
+          const retry = await searchApi(params)
+          setResults(retry.items || [])
+          setTotal(retry.total || 0)
+        } catch (e2) {
+          console.error('sis searchApi retry failed', e2)
+          // preservar últimos resultados para evitar tela vazia em falha transitória
+        }
       });
     }, 300);
     return () => clearTimeout(timer);
   }, [q, filters, page, sort]);
+
+  useEffect(() => {
+    // resetar página ao alterar termo de busca
+    setPage(1)
+  }, [q])
 
   const handleNavigate = (view: string) => {
     console.log('Navigate to:', view);
@@ -69,6 +84,7 @@ export default function App() {
             setSort={setSort}
             page={page}
             setPage={setPage}
+            query={q}
           />
         </div>
       </main>

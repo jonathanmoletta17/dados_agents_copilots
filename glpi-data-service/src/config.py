@@ -47,10 +47,10 @@ class Config:
     
     # Sync Configuration
     SYNC_INTERVAL: int = int(os.getenv("SYNC_INTERVAL", "15"))
-    SYNC_FULL_DAYS_LOOKBACK: int = int(os.getenv("SYNC_FULL_DAYS_LOOKBACK", "365"))
     
     # Application Configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    DISABLE_SYNC: bool = os.getenv("DISABLE_SYNC", "false").lower() == "true"
     
     @classmethod
     def get_user_token(cls, context: str) -> str:
@@ -79,6 +79,8 @@ class Config:
     @classmethod
     def validate(cls) -> bool:
         """Valida se todas as configurações necessárias estão presentes."""
+        if cls.DISABLE_SYNC:
+            return True
         missing = []
         
         # Validação DTIC

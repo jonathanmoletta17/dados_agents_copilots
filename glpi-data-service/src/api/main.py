@@ -10,7 +10,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from src.config import config
-from src.api.routes import tickets, stats, sync, health, dashboard, sis_dashboard, search, carregadores
+from src.api.routes import tickets, stats, sync, health, dashboard, sis_dashboard, search, sis_carregadores
 from src.workers.realtime_sync_worker import RealtimeSyncWorker
 
 # Configuração de Logs
@@ -26,17 +26,16 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Iniciando GLPI Data Service...")
     
     try:
-        # Validar configurações
         config.validate()
-        
-        # Iniciar worker em background
-        sync_worker = RealtimeSyncWorker()
-        task = asyncio.create_task(sync_worker.run())
-        logger.info("✅ Sync worker iniciado")
+        task = None
+        if not config.DISABLE_SYNC:
+            sync_worker = RealtimeSyncWorker()
+            task = asyncio.create_task(sync_worker.run())
+            logger.info("✅ Sync worker iniciado")
         yield
-        # Parar worker ao encerrar
-        sync_worker.stop()
-        await task
+        if task:
+            sync_worker.stop()
+            await task
         
     except Exception as e:
         logger.error(f"❌ Erro no startup: {e}")
@@ -69,7 +68,7 @@ app.include_router(dashboard.router, prefix="/api/v1", tags=["Dashboard"])
 app.include_router(sis_dashboard.router, prefix="/api/v1", tags=["SIS Dashboard"])
 app.include_router(search.router, prefix="/api/v1", tags=["Search"])
 logger.info("Registering Carregadores router...")
-app.include_router(carregadores.router, prefix="/api/v1", tags=["Carregadores"])
+app.include_router(sis_carregadores.router, prefix="/api/v1", tags=["Carregadores"])
 
 if __name__ == "__main__":
     import uvicorn

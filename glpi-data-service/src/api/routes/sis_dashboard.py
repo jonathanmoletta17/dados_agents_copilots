@@ -35,21 +35,27 @@ async def get_sis_general_stats(
             GROUP BY status
         """)
         result = session.execute(query_status)
-        status_counts = {row[0]: row[1] for row in result}
-        
-        # Mapping for SIS Dashboard
-        # NOVO -> novos
-        # ATRIBUIDO -> em_atendimento
-        # PENDENTE -> pendentes
-        # PLANEJADO -> planejados
-        # SOLUCIONADO + FECHADO -> resolvidos
-        
+        raw = [(str(row[0] or ''), int(row[1] or 0)) for row in result]
+        # Normaliza para lower-case
+        lowered = { (s or '').lower(): c for s, c in raw }
+
+        def get_sum(*synonyms: str) -> int:
+            return sum(lowered.get(s.lower(), 0) for s in synonyms)
+
+        novos = get_sum('novo')
+        em_atendimento = get_sum('atribuido','em andamento (atribuído)','em andamento (atribuido)')
+        pendentes = get_sum('pendente')
+        planejados = get_sum('planejado','em andamento (planejado)')
+        solucionados = get_sum('solucionado')
+        fechados = get_sum('fechado')
+        resolvidos = solucionados + fechados
+
         return {
-            "novos": status_counts.get('NOVO', 0),
-            "em_atendimento": status_counts.get('ATRIBUIDO', 0),
-            "pendentes": status_counts.get('PENDENTE', 0),
-            "planejados": status_counts.get('PLANEJADO', 0),
-            "resolvidos": status_counts.get('SOLUCIONADO', 0) + status_counts.get('FECHADO', 0)
+            "novos": novos,
+            "em_atendimento": em_atendimento,
+            "pendentes": pendentes,
+            "planejados": planejados,
+            "resolvidos": resolvidos
         }
 
 @router.get("/sis/dashboard/ranking-entidades")

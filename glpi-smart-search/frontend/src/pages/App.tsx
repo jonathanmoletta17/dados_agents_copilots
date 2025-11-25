@@ -17,7 +17,7 @@ export default function App() {
   const pageSize = 20
 
   useEffect(() => {
-    statsApi().then(setStats).catch(err => {
+    statsApi(['novo', 'pendente', 'solucionado', 'fechado']).then(setStats).catch(err => {
       console.error('statsApi failed', err)
     })
   }, [])
@@ -38,17 +38,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <SearchHeader
-        onSwitchToDashboard={() => window.location.href = 'http://localhost:3000'}
-        onSwitchToSearch={() => window.location.href = 'http://localhost:3004'}
-      />
+      <SearchHeader />
 
       <div className="max-w-[1600px] mx-auto p-6 space-y-6">
         {/* Search Bar */}
         <SearchBar
           value={q}
           onChange={setQ}
-          onFilterChange={setFilters}
+          onFilterChange={(f: Record<string, any>) => { setPage(1); setFilters(f) }}
         />
 
         {/* Stats Panel */}
@@ -61,6 +58,7 @@ export default function App() {
           <FilterChips filters={filters} onRemove={(k) => {
             const newF = { ...filters }
             delete newF[k]
+            setPage(1)
             setFilters(newF)
           }} />
         )}
@@ -74,6 +72,7 @@ export default function App() {
           setSort={setSort}
           page={page}
           setPage={setPage}
+          query={q}
         />
       </div>
     </div>

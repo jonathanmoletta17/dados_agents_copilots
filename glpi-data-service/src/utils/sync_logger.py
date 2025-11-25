@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 class SyncLogger:
-    def __init__(self, log_dir: str = "."):
+    def __init__(self, log_dir: str = "logs"):
         self.log_dir = log_dir
         os.makedirs(log_dir, exist_ok=True)
         

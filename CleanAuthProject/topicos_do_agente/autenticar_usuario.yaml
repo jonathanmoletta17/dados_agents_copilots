@@ -1,0 +1,190 @@
+kind: AdaptiveDialog
+modelDescription: Autenticar usuário no GLPI com card, retentativa e cancelamento
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: SetVariable
+      id: init_attempts
+      variable: Topic.auth_attempts
+      value: 0
+
+    - kind: SetVariable
+      id: init_max
+      variable: Topic.max_auth_attempts
+      value: 3
+
+    - kind: SetVariable
+      id: init_email
+      variable: Topic.user_email
+      value: =If(IsBlank(System.User.Email), "", System.User.Email)
+
+    - kind: AdaptiveCardPrompt
+      id: loginCard
+      interruptionPolicy:
+        allowInterruption: false
+
+      card: |-
+        ={
+                '$schema': "https://adaptivecards.io/schemas/adaptive-card.json",
+                type: "AdaptiveCard",
+                version: "1.5",
+                body: [
+                  { type: "TextBlock", size: "Medium", weight: "Bolder", text: "Autenticação CAU", horizontalAlignment: "Center", wrap: true, style: "heading" },
+                  { type: "Input.Text", id: "UserVal", label: "E-mail", isRequired: true, errorMessage: "Informe o e-mail", value: Topic.user_email },
+                  { type: "Input.Text", id: "PassVal", style: "Password", label: "Senha", isRequired: true, errorMessage: "Informe a senha" }
+                ],
+                actions: [
+                  { type: "Action.Submit", title: "Entrar", style: "positive", associatedInputs: "auto",  data: { id: "LoginVal"  } },
+                  { type: "Action.Submit", title: "Cancelar", style: "destructive", associatedInputs: "none", data: { id: "CancelVal" } }
+                ]
+              }
+      output:
+        binding:
+          id: Topic.action
+          PassVal: Topic.user_password
+          UserVal: Topic.user_email
+
+      outputType:
+        properties:
+          id: String
+          PassVal: String
+          UserVal: String
+
+    - kind: ConditionGroup
+      id: on_cancel
+      conditions:
+        - id: is_cancel
+          condition: =Topic.action = "CancelVal"
+          actions:
+            - kind: SendActivity
+              id: msg_cancel
+              activity: Autenticação cancelada.
+
+            - kind: CancelAllDialogs
+              id: stop_all
+
+    - kind: HttpRequestAction
+      id: http_auth
+      method: Post
+      url: ="https://drilling-tom-kilometers-lean.trycloudflare.com/api/authenticate-user"
+      headers:
+        Accept: application/json
+        Content-Type: application/json
+
+      body:
+        kind: JsonRequestContent
+        content: "={ email: Text(Topic.user_email), password: Text(Topic.user_password) }"
+
+      response: Topic.authRaw
+      responseSchema: Any
+
+    - kind: ParseValue
+      id: parse_auth
+      variable: Topic.authRec
+      valueType:
+        kind: Record
+        properties:
+          data:
+            type:
+              kind: Record
+              properties:
+                email: String
+                login: String
+                session_token: String
+                user_id: Number
+
+          message: String
+          status: String
+
+      value: =Topic.authRaw
+
+    - kind: ConditionGroup
+      id: on_fail
+      conditions:
+        - id: status_not_ok
+          condition: =Text(Topic.authRec.status) <> "ok"
+          actions:
+            - kind: SetVariable
+              id: inc_attempt
+              variable: Topic.auth_attempts
+              value: =Topic.auth_attempts + 1
+
+            - kind: ConditionGroup
+              id: try_again_or_stop
+              conditions:
+                - id: can_retry
+                  condition: =Topic.auth_attempts < Topic.max_auth_attempts
+                  actions:
+                    - kind: SendActivity
+                      id: msg_retry
+                      activity: Falha na autenticação. Tente novamente. ({Topic.auth_attempts}/{Topic.max_auth_attempts})
+
+                    - kind: GotoAction
+                      id: back_to_card
+                      actionId: loginCard
+
+              elseActions:
+                - kind: SendActivity
+                  id: msg_lock
+                  activity: Você tentou {Topic.max_auth_attempts} vezes. Tente mais tarde para evitar bloqueio.
+
+                - kind: CancelAllDialogs
+                  id: stop_after_fail
+
+    - kind: SetVariable
+      id: out_tok
+      variable: Topic.out_session_token
+      value: =Text(Topic.authRec.data.session_token)
+
+    - kind: SetVariable
+      id: out_uid
+      variable: Topic.out_user_id
+      value: =Value(Topic.authRec.data.user_id)
+
+    - kind: SetVariable
+      id: out_login
+      variable: Topic.out_login
+      value: =Text(Topic.authRec.data.login)
+
+    - kind: SetVariable
+      id: out_email
+      variable: Topic.out_email
+      value: =Text(Topic.authRec.data.email)
+
+    - kind: SetVariable
+      id: out_status
+      variable: Topic.out_auth_status
+      value: =Text(Topic.authRec.status)
+
+    - kind: SetVariable
+      id: wipe_pwd
+      variable: Topic.user_password
+      value: =Blank()
+
+    - kind: EndDialog
+      id: done
+
+inputType: {}
+outputType:
+  properties:
+    out_auth_status:
+      displayName: out_auth_status
+      type: String
+
+    out_email:
+      displayName: out_email
+      type: String
+
+    out_login:
+      displayName: out_login
+      type: String
+
+    out_session_token:
+      displayName: out_session_token
+      type: String
+
+    out_user_id:
+      displayName: out_user_id
+      type: Number

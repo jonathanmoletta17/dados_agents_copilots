@@ -213,6 +213,80 @@ class PostgreSQLManager:
             error = SyncError(**error_data)
             session.add(error)
     
+    
+    # ==================== CARREGADORES METHODS ====================
+    
+    def upsert_carregador(self, carregador_data: dict):
+        """
+        Insere ou atualiza carregador.
+        
+        Args:
+            carregador_data: Dicionário com dados do carregador
+        """
+        from src.db.models import Carregador
+        from sqlalchemy.dialects.postgresql import insert
+        from datetime import datetime
+        
+        with self.get_session() as session:
+            stmt = insert(Carregador).values(**carregador_data)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['id'],
+                set_={
+                    'name': stmt.excluded.name,
+                    'locations_id': stmt.excluded.locations_id,
+                    'location_name': stmt.excluded.location_name,
+                    'users_id': stmt.excluded.users_id,
+                    'user_name': stmt.excluded.user_name,
+                    'is_deleted': stmt.excluded.is_deleted,
+                    'date_mod': stmt.excluded.date_mod,
+                    'sincronizado_em': datetime.utcnow()
+                }
+            )
+            session.execute(stmt)
+    
+    def link_carregador_to_ticket(self, ticket_id: int, carregador_id: int, itemtype: str = 'PluginGenericobjectCarregador'):
+        """
+        Cria vínculo entre ticket e carregador.
+        
+        Args:
+            ticket_id: ID do ticket (glpi_id)
+            carregador_id: ID do carregador
+            itemtype: Tipo do item (default: PluginGenericobjectCarregador)
+        """
+        from src.db.models import CarregadorTicket
+        from sqlalchemy.dialects.postgresql import insert
+        
+        with self.get_session() as session:
+            link_data = {
+                'tickets_id': ticket_id,
+                'items_id': carregador_id,
+                'itemtype': itemtype
+            }
+            stmt = insert(CarregadorTicket).values(**link_data)
+            # Evitar duplicatas
+            stmt = stmt.on_conflict_do_nothing()
+            session.execute(stmt)
+    
+    def get_carregadores_count(self, is_deleted: int = 0) -> int:
+        """Conta carregadores no banco."""
+        from src.db.models import Carregador
+        
+        with self.get_session() as session:
+            return session.query(Carregador).filter(
+                Carregador.is_deleted == is_deleted
+            ).count()
+    
+    def get_carregador_by_id(self, carregador_id: int):
+        """Busca carregador por ID."""
+        from src.db.models import Carregador
+        
+        with self.get_session() as session:
+            return session.query(Carregador).filter(
+                Carregador.id == carregador_id
+            ).first()
+    
+    # ==================== END CARREGADORES METHODS ====================
+    
     def close(self):
         """Fecha conexões e limpa recursos."""
         if self.engine:

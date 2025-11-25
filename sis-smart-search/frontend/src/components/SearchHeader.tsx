@@ -1,4 +1,4 @@
-import { Search, LayoutDashboard } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface SearchHeaderProps {
     onNavigate?: (view: string) => void;
@@ -6,7 +6,7 @@ interface SearchHeaderProps {
 
 export default function SearchHeader({ onNavigate }: SearchHeaderProps) {
     return (
-        <header className="bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 text-white shadow-2xl border-b border-slate-700/50">
+        <header className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white shadow-2xl border-b border-blue-500/30">
             <div className="max-w-[1600px] mx-auto px-6 py-4">
                 <div className="flex items-center justify-between">
                     {/* Title Section */}
@@ -20,24 +20,7 @@ export default function SearchHeader({ onNavigate }: SearchHeaderProps) {
                         </div>
                     </div>
 
-                    {/* Navigation Buttons */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => onNavigate?.("sis-dashboard")}
-                            className="bg-white/10 hover:bg-white/20 transition-all rounded-lg px-4 py-2.5 backdrop-blur-sm border border-white/20 hover:scale-105 flex items-center gap-2"
-                        >
-                            <LayoutDashboard className="w-5 h-5" />
-                            <span className="text-sm">Dashboard SIS</span>
-                        </button>
-
-                        <button
-                            onClick={() => onNavigate?.("dtic-search")}
-                            className="bg-white/10 hover:bg-white/20 transition-all rounded-lg px-4 py-2.5 backdrop-blur-sm border border-white/20 hover:scale-105 flex items-center gap-2"
-                        >
-                            <Search className="w-5 h-5" />
-                            <span className="text-sm">Busca DTIC</span>
-                        </button>
-                    </div>
+                    
                 </div>
             </div>
         </header>
