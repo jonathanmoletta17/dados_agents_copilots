@@ -150,6 +150,16 @@ class GLPIClient:
         
         return self.make_request(endpoint, method='PUT', json_data=payload)
 
+    def create_ticket(self, input_payload: Dict) -> Dict:
+        """Cria um ticket no GLPI.
+        Espera um dicionário com os campos do Ticket (sem o wrapper), e envia como {"input": {...}}.
+        Retorna o JSON da API do GLPI.
+        """
+        if not isinstance(input_payload, dict):
+            raise ValueError("input_payload deve ser um dict")
+        payload = {"input": input_payload}
+        return self.make_request("Ticket", method='POST', json_data=payload)
+
     def _get_all_pages(self, endpoint: str, params: Dict = None) -> List[Dict]:
         """Helper to fetch all pages from an endpoint."""
         if params is None:
