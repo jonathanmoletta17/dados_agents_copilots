@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# ONLY install dependencies - code comes from volume mount
+COPY package*.json ./
+RUN npm install
+
+EXPOSE 5173
+
+# Code will be mounted via docker-compose volumes
+CMD ["npm", "run", "dev", "--", "--host"]
