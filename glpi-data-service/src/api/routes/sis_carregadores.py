@@ -7,6 +7,9 @@ from src.db.postgres_manager import get_db_manager
 router = APIRouter()
 
 # SQL query to list all chargers with their current status
+# NOTE: This endpoint has been DISABLED due to performance issues.
+# The query contains hundreds of nested subqueries that execute for every row,
+# causing ~15 second response times. Use the optimized /kanban endpoint instead.
 QUERY_LIST_CARREGADORES = """
     SELECT 
         c.id,
@@ -66,37 +69,39 @@ QUERY_LIST_CARREGADORES = """
     ORDER BY c.name
 """
 
-@router.get("/sis/carregadores/")
-async def list_carregadores():
-    """
-    Lista todos os carregadores com status atual.
-    
-    Status calculation:
-    - 'ocupado': Tem ticket em andamento (status != FECHADO/SOLUCIONADO)
-    - 'disponivel': Sem tickets ou todos fechados
-    
-    Returns:
-        Lista com: id, nome, localizacao, status, ticket_id, tempo_atribuido, tempo_disponivel
-    """
-    context = "sis"
-    db = get_db_manager(context)
-    
-    with db.get_session() as session:
-        query = text(QUERY_LIST_CARREGADORES.format(schema=context))
-        result = session.execute(query)
-        return [
-            {
-                "id": row[0],
-                "nome": row[1],
-                "localizacao": row[2],
-                "status": row[3],
-                "ticket_id": row[4],
-                "ticket_titulo": row[5][:50] + '...' if row[5] and len(row[5]) > 50 else row[5],
-                "tempo_atribuido": row[6],
-                "tempo_disponivel": row[7]
-            }
-            for row in result
-        ]
+# ENDPOINT DISABLED: Performance bottleneck with nested subqueries
+# Use /sis/carregadores/kanban instead for optimized performance
+# @router.get("/sis/carregadores/")
+# async def list_carregadores():
+#     """
+#     Lista todos os carregadores com status atual.
+#     
+#     Status calculation:
+#     - 'ocupado': Tem ticket em andamento (status != FECHADO/SOLUCIONADO)
+#     - 'disponivel': Sem tickets ou todos fechados
+#     
+#     Returns:
+#         Lista com: id, nome, localizacao, status, ticket_id, tempo_atribuido, tempo_disponivel
+#     """
+#     context = "sis"
+#     db = get_db_manager(context)
+#     
+#     with db.get_session() as session:
+#         query = text(QUERY_LIST_CARREGADORES.format(schema=context))
+#         result = session.execute(query)
+#         return [
+#             {
+#                 "id": row[0],
+#                 "nome": row[1],
+#                 "localizacao": row[2],
+#                 "status": row[3],
+#                 "ticket_id": row[4],
+#                 "ticket_titulo": row[5][:50] + '...' if row[5] and len(row[5]) > 50 else row[5],
+#                 "tempo_atribuido": row[6],
+#                 "tempo_disponivel": row[7]
+#             }
+#             for row in result
+#         ]
 
 @router.get("/sis/carregadores/ranking")
 async def carregadores_ranking(

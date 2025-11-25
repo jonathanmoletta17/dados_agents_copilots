@@ -174,6 +174,19 @@
 | Manutenção de Esquadria | N/A | N/A | Requer busca em subcategoria/termo composto |
 | Troca de Borracha/Vedação | N/A | N/A | Requer busca em subcategoria/termo composto |
 
+### Carregadores — Exemplos confirmados por leitura (ITILCategory)
+| Rótulo Observado | ID GLPI | Nome GLPI | Fonte |
+|---|---|---|---|
+| Carregadores | 55 | Conservação > Carregadores | Link em Ticket (leitura) |
+| Movimentação de Insumos | 56 | Conservação > Carregadores > Movimentação de Insumos | Link em Ticket (leitura) |
+| Movimentação Mobiliário | 103 | Conservação > Carregadores > Movimentação Mobiliário | Link em Ticket (leitura) |
+
+### Mensageria — Exemplos confirmados por leitura (ITILCategory)
+| Rótulo Observado | ID GLPI | Nome GLPI | Fonte |
+|---|---|---|---|
+| Mensageria | 128 | Conservação > Mensageria | Link em Ticket (leitura) |
+| Movimentação de Documentos | 129 | Conservação > Mensageria > Movimentação Documentos | Link em Ticket (leitura) |
+
 ### Principais Categorias (confirmadas por leitura)
 | ID GLPI | Nome GLPI |
 |---|---|
@@ -210,3 +223,37 @@
 - As opções de “Tipo” dos formulários que não apareceram nas listas planas exigem busca dirigida por termos compostos e/ou navegação de subárvores de `ITILCategory`.
 - As opções de “Localização” genéricas (ex.: “Sala/Escritório”, “Sala de Reunião”) requerem correspondência aproximada com nomes de `Location` existentes no GLPI.
 - Todas as coletas e validações são realizadas com sessão temporária (`user_token + app_token`) e encerradas em seguida, em modo leitura.
+
+## Proposta de Estrutura-Alvo do App (somente documentação)
+
+### Diretrizes de Simplificação
+- Manter: `lib/` (telas, widgets, serviços, estado, dados), `assets/images/`, `pubspec.yaml`, `analysis_options.yaml`, plataformas alvo (Android/iOS).
+- Simplificar: substituir múltiplas telas específicas por configuração (um único `FormTemplate` dirigível por dados), manter “Meus Chamados” como placeholder até o backend.
+- Remover do repositório da app: SDK Flutter (`external-projects/flutter-sdk/flutter`), zips de SDK (`flutter_windows_*.zip`), plataformas não-alvo (web/linux/macos/windows) se o foco for mobile.
+- Opcional: adiar `test/` se houver urgência de simplificação (recomendado manter a médio prazo).
+
+### Estrutura-Alvo (proposta)
+- `lib/`
+  - `features/auth/login_screen.dart` — tela de login
+  - `features/catalog/service_catalog_screen.dart` — catálogo e navegação
+  - `features/forms/form_template.dart` — formulário genérico
+  - `features/forms/config/` — opções por categoria (flags, listas, extras)
+  - `services/glpi_client.dart` — contrato/mock (integração real no backend)
+  - `state/app_state.dart` — estado (apenas o necessário ao frontend)
+  - `widgets/` — campos reutilizáveis (texto, select, anexo)
+- `assets/images/` — logos
+- `android/`, `ios/` — plataformas alvo
+- `pubspec.yaml`, `analysis_options.yaml`
+
+### Itens Irrelevantes ao Escopo (explicações)
+- `external-projects/flutter-sdk/flutter`: checkout do SDK Flutter, não pertence ao repositório da aplicação; o SDK deve ser instalado no ambiente.
+- `external-projects/flutter_windows_*.zip`: pacotes de distribuição do SDK; não devem ser versionados junto com a app.
+- `web/`, `linux/`, `macos/`, `windows/` dentro do app: gerados por scaffold multi-plataforma; dispensáveis se o alvo é apenas Android/iOS.
+- Múltiplas telas por serviço: replicam `FormTemplate` com poucas diferenças; podem ser substituídas por configuração única e manutenção centralizada.
+
+### Plano de Migração (sem implementação)
+- Etapa 1: inventariar telas/arquivos que permanecem (login, catálogo, `FormTemplate`, widgets, estado mínimo, serviço mock) e os que se tornam configuração.
+- Etapa 2: extrair opções por categoria (flags e listas) para `features/forms/config/` sem alterar UI/UX.
+- Etapa 3: remover (do projeto) plataformas não-alvo e artefatos de SDK, mantendo apenas Android/iOS.
+- Etapa 4: documentar contrato do backend (`POST /api/tickets`, metadados e upload de anexo) e mover lógica real de GLPI para servidor.
+- Etapa 5: validar funcionalidade end-to-end em homologação (somente leitura para metadados e criação controlada de tickets quando apropriado).
