@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/Dockerfile
+    container_name: dtic-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - glpi-network
+
+networks:
+  glpi-network:
+    external: true
+    name: glpi-data-service_glpi-network

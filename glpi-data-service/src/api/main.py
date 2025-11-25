@@ -10,7 +10,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from src.config import config
-from src.api.routes import tickets, stats, sync, health, dashboard, sis_dashboard, search, sis_carregadores
+from src.api.routes import tickets, stats, sync, health, dashboard, sis_dashboard, search, sis_carregadores, glpi_submit
 from src.workers.realtime_sync_worker import RealtimeSyncWorker
 
 # Configuração de Logs
@@ -69,6 +69,7 @@ app.include_router(sis_dashboard.router, prefix="/api/v1", tags=["SIS Dashboard"
 app.include_router(search.router, prefix="/api/v1", tags=["Search"])
 logger.info("Registering Carregadores router...")
 app.include_router(sis_carregadores.router, prefix="/api/v1", tags=["Carregadores"])
+app.include_router(glpi_submit.router, prefix="/api/v1", tags=["GLPI Submission"])
 
 if __name__ == "__main__":
     import uvicorn

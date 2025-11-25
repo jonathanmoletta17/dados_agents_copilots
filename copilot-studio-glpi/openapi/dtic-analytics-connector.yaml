@@ -1,0 +1,426 @@
+swagger: "2.0"
+info:
+  title: "DTIC Analytics API"
+  version: "1.0.0"
+  description: "API para análise de dados do GLPI DTIC - métricas, SLA, performance de técnicos e tendências"
+  contact:
+    name: "DTIC - Governo do RS"
+    email: "suporte@dtic.rs.gov.br"
+
+host: "api.dtic.rs.gov.br"
+basePath: "/api/v1/analytics/dtic"
+schemes:
+  - https
+
+securityDefinitions:
+  oauth2:
+    type: oauth2
+    flow: application
+    tokenUrl: https://api.dtic.rs.gov.br/oauth/token
+    scopes:
+      analytics:read: "Leitura de dados analytics"
+  apiKey:
+    type: apiKey
+    name: X-API-Key
+    in: header
+
+security:
+  - oauth2:
+      - analytics:read
+  - apiKey: []
+
+paths:
+  /tickets/metrics:
+    get:
+      operationId: "getTicketsMetrics"
+      summary: "Obter métricas agregadas de tickets"
+      description: |
+        Retorna KPIs e estatísticas agregadas de tickets do GLPI DTIC para um período específico.
+        Use esta ação quando o usuário solicitar:
+        - Número total de tickets em um período
+        - Taxa de resolução e tickets abertos/fechados
+        - Métricas de SLA (conformidade, tempo médio)
+        - Distribuição por prioridade ou categoria
+        - Top solicitantes (entidades)
+        
+        Requer obrigatoriamente data de início e fim.
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          type: string
+          format: date
+          description: "Data de início do período (YYYY-MM-DD)"
+          example: "2025-11-01"
+        - name: end_date
+          in: query
+          required: true
+          type: string
+          format: date
+          description: "Data de fim do período (YYYY-MM-DD)"
+          example: "2025-11-30"
+        - name: category
+          in: query
+          required: false
+          type: string
+          description: "Filtrar por categoria específica (hardware, software, network, access)"
+          enum: ["hardware", "software", "network", "access"]
+        - name: priority
+          in: query
+          required: false
+          type: string
+          description: "Filtrar por prioridade (critical, high, medium, low)"
+          enum: ["critical", "high", "medium", "low"]
+      responses:
+        200:
+          description: "Métricas retornadas com sucesso"
+          schema:
+            $ref: "#/definitions/TicketMetrics"
+        400:
+          description: "Parâmetros inválidos"
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: "Não autorizado"
+          schema:
+            $ref: "#/definitions/Error"
+
+  /tickets/trends:
+    get:
+      operationId: "getTicketsTrends"
+      summary: "Obter tendências de tickets ao longo do tempo"
+      description: |
+        Retorna série temporal com evolução de tickets para análise de tendências.
+        Use esta ação quando o usuário solicitar:
+        - Tendências ao longo do tempo (crescimento, queda)
+        - Comparação semana a semana ou mês a mês
+        - Identificação de padrões sazonais
+        - Análise de picos de demanda
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: end_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: granularity
+          in: query
+          required: false
+          type: string
+          default: "day"
+          enum: ["day", "week", "month"]
+          description: "Granularidade da série temporal"
+        - name: metric
+          in: query
+          required: false
+          type: string
+          default: "count"
+          enum: ["count", "resolution_time", "sla_compliance"]
+          description: "Métrica a ser analisada"
+      responses:
+        200:
+          description: "Tendências retornadas com sucesso"
+          schema:
+            $ref: "#/definitions/TrendData"
+
+  /sla/compliance:
+    get:
+      operationId: "getSLACompliance"
+      summary: "Obter detalhes de conformidade com SLA"
+      description: |
+        Retorna taxa de conformidade com SLA e detalhes de violações.
+        Use esta ação quando o usuário perguntar:
+        - "Como está o SLA?"
+        - Taxa de conformidade por prioridade ou categoria
+        - Detalhes de violações de SLA
+        - Tempo médio de resolução vs meta
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: end_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: include_violations
+          in: query
+          required: false
+          type: boolean
+          default: false
+          description: "Incluir detalhes das violações (máximo 10 mais graves)"
+      responses:
+        200:
+          description: "Dados de SLA retornados com sucesso"
+          schema:
+            $ref: "#/definitions/SLACompliance"
+
+  /technicians/performance:
+    get:
+      operationId: "getTechnicianPerformance"
+      summary: "Obter ranking e performance de técnicos"
+      description: |
+        Retorna ranking de técnicos com métricas de performance.
+        Use esta ação quando o usuário solicitar:
+        - Ranking de técnicos por tickets resolvidos
+        - Performance individual de técnicos
+        - Comparação entre técnicos
+        - Identificação de alto desempenho ou necessidade de suporte
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: end_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: top_n
+          in: query
+          required: false
+          type: integer
+          default: 10
+          minimum: 1
+          maximum: 50
+          description: "Número de técnicos a retornar no ranking"
+      responses:
+        200:
+          description: "Performance de técnicos retornada com sucesso"
+          schema:
+            $ref: "#/definitions/TechnicianPerformance"
+
+  /tickets/by-category:
+    get:
+      operationId: "getTicketsByCategory"
+      summary: "Obter distribuição de tickets por categoria"
+      description: |
+        Retorna distribuição detalhada de tickets por categoria.
+        Use quando o usuário perguntar sobre:
+        - Quais categorias têm mais tickets
+        - Distribuição de demandas por tipo
+        - Performance por categoria (SLA, tempo de resolução)
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          type: string
+          format: date
+        - name: end_date
+          in: query
+          required: true
+          type: string
+          format: date
+      responses:
+        200:
+          description: "Distribuição por categoria retornada com sucesso"
+          schema:
+            $ref: "#/definitions/CategoryDistribution"
+
+definitions:
+  TicketMetrics:
+    type: object
+    properties:
+      period:
+        type: object
+        properties:
+          start:
+            type: string
+            format: date
+          end:
+            type: string
+            format: date
+          label:
+            type: string
+          days:
+            type: integer
+      summary:
+        type: object
+        properties:
+          total_tickets:
+            type: integer
+          open_tickets:
+            type: integer
+          closed_tickets:
+            type: integer
+          in_progress:
+            type: integer
+          pending:
+            type: integer
+          resolution_rate_percent:
+            type: number
+      sla:
+        type: object
+        properties:
+          compliance_percent:
+            type: number
+          within_sla:
+            type: integer
+          violated_sla:
+            type: integer
+          avg_resolution_hours:
+            type: number
+          target_hours:
+            type: number
+      by_priority:
+        type: object
+        additionalProperties:
+          type: integer
+      by_category:
+        type: object
+        additionalProperties:
+          type: integer
+      by_status:
+        type: object
+        additionalProperties:
+          type: integer
+      top_requesters:
+        type: array
+        items:
+          type: object
+          properties:
+            entity:
+              type: string
+            count:
+              type: integer
+      metadata:
+        type: object
+        properties:
+          generated_at:
+            type: string
+            format: date-time
+          cache_ttl_seconds:
+            type: integer
+
+  TrendData:
+    type: object
+    properties:
+      period:
+        type: object
+      series:
+        type: array
+        items:
+          type: object
+          properties:
+            date:
+              type: string
+              format: date
+            count:
+              type: integer
+            avg_resolution_hours:
+              type: number
+            sla_compliance_percent:
+              type: number
+      statistics:
+        type: object
+        properties:
+          avg_count:
+            type: number
+          std_dev_count:
+            type: number
+          trend:
+            type: string
+            enum: ["increasing", "decreasing", "stable"]
+          variation_percent:
+            type: number
+
+  SLACompliance:
+    type: object
+    properties:
+      overall:
+        type: object
+        properties:
+          compliance_percent:
+            type: number
+          total_tickets:
+            type: integer
+          within_sla:
+            type: integer
+          violated_sla:
+            type: integer
+      by_priority:
+        type: object
+        additionalProperties:
+          type: object
+      by_category:
+        type: object
+        additionalProperties:
+          type: object
+      avg_times:
+        type: object
+      violations_summary:
+        type: object
+      violations_detail:
+        type: array
+        items:
+          type: object
+
+  TechnicianPerformance:
+    type: object
+    properties:
+      period:
+        type: string
+      technicians:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            total_assigned:
+              type: integer
+            resolved:
+              type: integer
+            resolution_rate_percent:
+              type: number
+            avg_resolution_hours:
+              type: number
+            sla_compliance_percent:
+              type: number
+      team_statistics:
+        type: object
+      outliers:
+        type: object
+
+  CategoryDistribution:
+    type: object
+    properties:
+      categories:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            total:
+              type: integer
+            open:
+              type: integer
+            closed:
+              type: integer
+            avg_resolution_hours:
+              type: number
+            sla_compliance_percent:
+              type: number
+
+  Error:
+    type: object
+    properties:
+      error:
+        type: object
+        properties:
+          code:
+            type: string
+          message:
+            type: string
+          details:
+            type: object

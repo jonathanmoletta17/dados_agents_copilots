@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/Dockerfile.dev
+    container_name: dtic-dashboard-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://glpi-service-dev:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - glpi-network
+
+networks:
+  glpi-network:
+    external: true
+    name: glpi-data-service_glpi-network
