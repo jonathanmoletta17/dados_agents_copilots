@@ -32,4 +32,6 @@ export interface NewTicketItem {
     solicitante: string;
     data: string;
     prioridade?: string;
+    descricao_preview?: string | null;
+    descricao_full?: string | null;
 }

@@ -3,6 +3,7 @@ from typing import Optional, List, Dict
 from datetime import datetime, timedelta
 from sqlalchemy import text
 from src.db.postgres_manager import get_db_manager
+from src.utils.text_processor import TextProcessor
 
 router = APIRouter()
 
@@ -163,13 +164,37 @@ async def get_new_tickets(context: str):
         order_by="criado_em DESC"
     )
     
-    return [
-        {
+    response = []
+    for t in tickets:
+        item = {
             "id": t.glpi_id,
             "titulo": t.titulo,
             "solicitante": t.requerente,
             "data": t.criado_em.isoformat() if t.criado_em else None,
-            "prioridade": t.prioridade
+            "prioridade": t.prioridade,
+            "descricao_preview": None,
+            "descricao_full": None
         }
-        for t in tickets
-    ]
+        
+        # Process description if available
+        if t.descricao_md:
+            # Extrair apenas campo "Descrição" de formulários estruturados
+            extracted = TextProcessor.extract_form_description(t.descricao_md)
+            # Aplicar limpeza de texto padrão
+            cleaned = TextProcessor.clean_text(extracted)
+            item["descricao_full"] = cleaned
+            
+            # preview: 3 lines or 200 chars
+            lines = cleaned.splitlines()
+            preview = " ".join(lines) if len(lines) <= 3 else " ".join(lines[:3])
+            
+            if len(preview) > 200:
+                preview = preview[:200].rsplit(" ", 1)[0] + "…"
+            elif len(lines) > 3 or len(preview) < len(cleaned):
+                preview = preview + "…"
+            
+            item["descricao_preview"] = preview
+            
+        response.append(item)
+            
+    return response

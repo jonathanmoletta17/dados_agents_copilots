@@ -72,27 +72,15 @@ class TextProcessor:
         """
         Extrai apenas o campo "Descrição" de formulários estruturados do GLPI.
         
-        Formulários do GLPI SIS têm estrutura como:
-        **1) Este atendimento é para quem? : **Para mim
-        **2) Localização : **...
-        **7) Descrição : **TEXTO DA DESCRIÇÃO
-        **8) Anexar Arquivo : **...
-        
-        Esta função extrai apenas o conteúdo do campo "Descrição" (geralmente campo 7),
-        removendo todos os outros campos do formulário.
-        
-        Se o texto não tiver padrão de formulário, retorna o texto original.
+        Suporta múltiplos formatos:
+        1. SIS: **N) Descrição : **TEXTO
+        2. DTIC: N) DESCRIÇÃO DO PEDIDO : TEXTO (sem asteriscos)
         
         Args:
             text: Texto potencialmente contendo estrutura de formulário
             
         Returns:
             String contendo apenas a descrição, ou texto original se não for formulário
-            
-        Examples:
-            >>> text = "**7) Descrição : **Solicito um mensageiro **8) Anexar : **Nenhum"
-            >>> extract_form_description(text)
-            'Solicito um mensageiro'
         """
         if not text:
             return text
@@ -104,33 +92,43 @@ class TextProcessor:
         cleaned = re.sub(r'&#\d+;', '', cleaned)
         cleaned = re.sub(r'&[a-z]+;', '', cleaned)
         
-        # Estratégia 1: Regex otimizado para padrão **N) Descrição : **TEXTO
-        # Procura por qualquer número seguido de ") Descrição :"
-        pattern = r'\*\*\d+\)\s*Descri[çc][ãa]o\s*:\s*\*\*(.+?)(?:\*\*\d+\)|$)'
-        match = re.search(pattern, cleaned, re.IGNORECASE | re.DOTALL)
+        # Remover prefixos comuns de lixo do DTIC
+        cleaned = re.sub(r'^Dados do formulário\s*Dados Gerais\s*', '', cleaned, flags=re.IGNORECASE)
+        
+        # --- Estratégia 1: Padrão SIS (com Markdown) ---
+        # **N) Descrição : **TEXTO
+        pattern_sis = r'\*\*\d+\)\s*Descri[çc][ãa]o\s*:\s*\*\*(.+?)(?:\*\*\d+\)|$)'
+        match = re.search(pattern_sis, cleaned, re.IGNORECASE | re.DOTALL)
         
         if match:
             desc = match.group(1).strip()
-            # Limpar marcadores Markdown residuais
             desc = re.sub(r'\*\*\s*$', '', desc)
-            # Normalizar espaços em branco
+            desc = re.sub(r'\s+', ' ', desc)
+            return desc.strip()
+            
+        # --- Estratégia 2: Padrão DTIC (sem Markdown ou com chaves diferentes) ---
+        # N) DESCRIÇÃO DO PEDIDO : TEXTO
+        # Procura por "N) " seguido de "Descrição" ou "Descrição do Pedido"
+        # Captura até o próximo "N) " ou fim do texto
+        pattern_dtic = r'\d+\)\s*(?:Descri[çc][ãa]o|DESCRIÇÃO DO PEDIDO)\s*:\s*(.+?)(?:\s*\d+\)\s*[A-Z]|$)'
+        match = re.search(pattern_dtic, cleaned, re.IGNORECASE | re.DOTALL)
+        
+        if match:
+            desc = match.group(1).strip()
+            # Limpeza extra para DTIC
             desc = re.sub(r'\s+', ' ', desc)
             return desc.strip()
         
-        # Estratégia 2: Fallback com split por campos
-        # Mais robusto para variações de formato
-        fields = re.split(r'\*\*\d+\)', cleaned)
+        # --- Estratégia 3: Fallback com split por campos (Genérico) ---
+        fields = re.split(r'(?:\*\*|\s)\d+\)', cleaned)
         for field in fields:
             # Procurar por campo "Descrição"
-            if re.search(r'Descri[çc][ãa]o\s*:', field, re.IGNORECASE):
-                match = re.search(r'Descri[çc][ãa]o\s*:\s*\*\*(.+)', field, re.IGNORECASE | re.DOTALL)
-                if match:
-                    desc = match.group(1).strip()
-                    desc = re.sub(r'\*\*\s*$', '', desc)
-                    desc = re.sub(r'\s+', ' ', desc)
-                    return desc.strip()
+            if re.search(r'(?:Descri[çc][ãa]o|DESCRIÇÃO DO PEDIDO)\s*:', field, re.IGNORECASE):
+                # Remove o label
+                desc = re.sub(r'^(?:Descri[çc][ãa]o|DESCRIÇÃO DO PEDIDO)\s*:\s*(?:\*\*)?', '', field, flags=re.IGNORECASE)
+                desc = re.sub(r'\*\*\s*$', '', desc)
+                return " ".join(desc.split())
         
         # Se não encontrar padrão de formulário, retorna texto original
-        # Isso garante compatibilidade com descrições que não são formulários
         return text_str
 

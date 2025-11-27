@@ -71,6 +71,7 @@ logger.info("Registering Carregadores router...")
 app.include_router(sis_carregadores.router, prefix="/api/v1", tags=["Carregadores"])
 app.include_router(glpi_submit.router, prefix="/api/v1", tags=["GLPI Submission"])
 
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("src.api.main:app", host="0.0.0.0", port=8000, reload=True)

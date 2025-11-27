@@ -82,32 +82,38 @@ class RealtimeSyncWorker:
             except Exception as e:
                 logger.error(f"❌ Erro na validação de {context}: {e}")
     
-    async def incremental_sync(self, context: str, since: datetime = None):
+    async def incremental_sync(self, context: str, since: datetime = None, is_deleted: bool = False):
         """Sincronização incremental usando GLPIClient existente."""
         start_time = datetime.now()
         stats = {'novos': 0, 'atualizados': 0, 'sem_mudanca': 0, 'erros': 0}
         max_date_mod_seen = None  # 🆕 Rastrear maior date_mod processado
         
+        is_deleted_int = 1 if is_deleted else 0
+        sync_type_label = "DELETADOS" if is_deleted else "ATIVOS"
+
         try:
             client = self.clients[context]
             db_manager = self.db_managers[context]
             
             # Obter último timestamp de sync
             if since is None:
-                last_sync_str = db_manager.get_sync_meta('last_sync_time')
+                # Use separate meta key for deleted items to avoid overlapping timelines
+                meta_key = 'last_sync_time_deleted' if is_deleted else 'last_sync_time'
+                last_sync_str = db_manager.get_sync_meta(meta_key)
+                
                 if last_sync_str:
                     since = datetime.fromisoformat(last_sync_str)
-                    logger.info(f"📅 {context}: Usando last_sync do banco: {since}")
+                    logger.info(f"📅 {context} [{sync_type_label}]: Usando last_sync do banco: {since}")
                 else:
                     since = datetime.now() - timedelta(hours=1)
-                    logger.warning(f"⚠️  {context}: Nenhum last_sync encontrado, usando fallback: {since}")
+                    logger.warning(f"⚠️  {context} [{sync_type_label}]: Nenhum last_sync encontrado, usando fallback: {since}")
             
-            logger.info(f"🔄 {context}: Sincronização incremental DESDE: {since}")  # 🆕 Log explícito
+            logger.info(f"🔄 {context} [{sync_type_label}]: Sincronização incremental DESDE: {since}")  # 🆕 Log explícito
             
             # Iniciar sessão GLPI
             with client:
                 # Buscar tickets incrementais (usa o método existente do client)
-                ticket_batches = client.get_tickets_incremental(since, limit=100)
+                ticket_batches = client.get_tickets_incremental(since, limit=100, is_deleted=is_deleted_int)
                 
                 total_tickets = 0
                 for batch in ticket_batches:
@@ -127,13 +133,15 @@ class RealtimeSyncWorker:
                             existing = db_manager.get_ticket_by_glpi_id(ticket_data['glpi_id'])
                             
                             if not existing:
+                                # Se estamos syncando deletados e não existe, talvez não precisemos criar?
+                                # Mas se foi criado e deletado antes do sync pegar, precisamos criar como deletado.
                                 db_manager.upsert_ticket(ticket_data)
                                 stats['novos'] += 1
-                                logger.debug(f"➕ {context}: Ticket {ticket_data['glpi_id']} CRIADO")
-                            elif existing.ticket_hash != ticket_data['ticket_hash']:
+                                logger.debug(f"➕ {context}: Ticket {ticket_data['glpi_id']} CRIADO (is_deleted={ticket_data['is_deleted']})")
+                            elif existing.ticket_hash != ticket_data['ticket_hash'] or existing.is_deleted != ticket_data['is_deleted']:
                                 db_manager.upsert_ticket(ticket_data)
                                 stats['atualizados'] += 1
-                                logger.debug(f"🔄 {context}: Ticket {ticket_data['glpi_id']} ATUALIZADO (hash mudou)")
+                                logger.debug(f"🔄 {context}: Ticket {ticket_data['glpi_id']} ATUALIZADO (is_deleted={ticket_data['is_deleted']})")
                             else:
                                 stats['sem_mudanca'] += 1
                             
@@ -146,8 +154,11 @@ class RealtimeSyncWorker:
                 # 🆕 Usar maior date_mod visto OU hora atual se nenhum ticket processado
                 # Isso garante que não pulamos tickets modificados durante a execução
                 new_last_sync = max_date_mod_seen if max_date_mod_seen else start_time
-                db_manager.set_sync_meta('last_sync_time', new_last_sync.isoformat())
-                logger.info(f"💾 {context}: Atualizado last_sync_time para: {new_last_sync}")
+                
+                # Update correct meta key
+                meta_key = 'last_sync_time_deleted' if is_deleted else 'last_sync_time'
+                db_manager.set_sync_meta(meta_key, new_last_sync.isoformat())
+                logger.info(f"💾 {context} [{sync_type_label}]: Atualizado {meta_key} para: {new_last_sync}")
                 
                 # Registrar no histórico
                 duration = (datetime.now() - start_time).total_seconds()
@@ -376,7 +387,13 @@ class RealtimeSyncWorker:
         while self.running:
             try:
                 for context in self.contexts:
-                    await self.incremental_sync(context)
+                    # 1. Sync Active Tickets
+                    await self.incremental_sync(context, is_deleted=False)
+                    
+                    # 2. Sync Deleted Tickets (Trash)
+                    await self.incremental_sync(context, is_deleted=True)
+                    
+                    # 3. Sync Carregadores
                     await self.sync_carregadores(context)
                 
                 # Aguardar próximo ciclo

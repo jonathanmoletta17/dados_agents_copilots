@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  glpi-ai-agent:
+    build: .
+    container_name: glpi-ai-agent
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      - GLPI_DTIC_URL=${GLPI_DTIC_URL}
+      - GLPI_DTIC_APP_TOKEN=${GLPI_DTIC_APP_TOKEN}
+      - GLPI_DTIC_USER_TOKEN=${GLPI_DTIC_USER_TOKEN}
+      - GLPI_SIS_URL=${GLPI_SIS_URL}
+      - GLPI_SIS_APP_TOKEN=${GLPI_SIS_APP_TOKEN}
+      - GLPI_SIS_USER_TOKEN=${GLPI_SIS_USER_TOKEN}
+      - AI_SERVICE_URL=${AI_SERVICE_URL:-http://host.docker.internal:11434/api/generate}
+      - AI_MODEL_NAME=${AI_MODEL_NAME:-llama3}
+      - AI_CONFIDENCE_THRESHOLD=${AI_CONFIDENCE_THRESHOLD:-0.85}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

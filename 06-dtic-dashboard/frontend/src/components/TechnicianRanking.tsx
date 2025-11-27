@@ -58,7 +58,7 @@ export function TechnicianRanking({ ranking }: TechnicianRankingProps) {
   }
 
   return (
-    <div className="space-y-2 h-auto flex flex-col">
+    <div className="space-y-2 h-full flex flex-col" style={{ height: '100%' }}>
       <div className="flex items-center justify-between shrink-0">
         <h2 className="text-lg text-white flex items-center gap-2 font-semibold">
           <Award className="w-5 h-5 text-blue-400" />
@@ -127,7 +127,7 @@ export function TechnicianRanking({ ranking }: TechnicianRankingProps) {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-0 shrink-0">
+            <div className="flex justify-center gap-2 mt-2 shrink-0">
               <button
                 onClick={prevPage}
                 className="p-1 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"

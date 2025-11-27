@@ -57,13 +57,13 @@ export function LevelCharts({ levelStats }: LevelChartsProps) {
 
       <div className="grid grid-cols-5 gap-4 flex-1 min-h-0">
         {/* Bar Chart - 3 columns */}
-        <div className="col-span-3 bg-slate-900/50 rounded-lg p-3 border border-slate-700/30 h-full">
+        <div className="col-span-3 bg-slate-900/50 rounded-xl p-4 md:p-5 xl:p-6 border border-slate-700/40 h-full" style={{ height: 'clamp(320px, 42vh, 560px)' }}>
           <div className="text-xs text-slate-400 mb-2">Status por Nível</div>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart data={levelsData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-              <XAxis dataKey="level" stroke="#94a3b8" fontSize={12} />
-              <YAxis stroke="#94a3b8" fontSize={10} />
+              <XAxis dataKey="level" stroke="#94a3b8" fontSize={13} />
+              <YAxis stroke="#94a3b8" fontSize={12} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1e293b",
@@ -73,46 +73,53 @@ export function LevelCharts({ levelStats }: LevelChartsProps) {
                 }}
                 labelStyle={{ color: "#e2e8f0" }}
               />
-              <Legend wrapperStyle={{ fontSize: "11px" }} />
-              <Bar isAnimationActive={false} dataKey="novos" name="Novos" fill={COLORS.novos} radius={[4, 4, 0, 0]} />
-              <Bar isAnimationActive={false} dataKey="em_progresso" name="Em Progresso" fill={COLORS.progresso} radius={[4, 4, 0, 0]} />
-              <Bar isAnimationActive={false} dataKey="pendentes" name="Pendentes" fill={COLORS.pendentes} radius={[4, 4, 0, 0]} />
-              <Bar isAnimationActive={false} dataKey="resolvidos" name="Resolvidos" fill={COLORS.resolvidos} radius={[4, 4, 0, 0]} />
+              <Legend wrapperStyle={{ fontSize: "12px" }} />
+              <Bar isAnimationActive={false} dataKey="novos" name="Novos" fill={COLORS.novos} radius={[4, 4, 0, 0]} label={{ position: "top", fill: "#94a3b8", fontSize: 10 }} />
+              <Bar isAnimationActive={false} dataKey="em_progresso" name="Em Progresso" fill={COLORS.progresso} radius={[4, 4, 0, 0]} label={{ position: "top", fill: "#94a3b8", fontSize: 10 }} />
+              <Bar isAnimationActive={false} dataKey="pendentes" name="Pendentes" fill={COLORS.pendentes} radius={[4, 4, 0, 0]} label={{ position: "top", fill: "#94a3b8", fontSize: 10 }} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Pie Chart - 2 columns */}
-        <div className="col-span-2 bg-slate-900/50 rounded-lg p-3 border border-slate-700/30 h-full">
+        <div className="col-span-2 bg-slate-900/50 rounded-xl p-4 md:p-5 xl:p-6 border border-slate-700/40 h-full" style={{ height: 'clamp(320px, 42vh, 560px)' }}>
           <div className="text-xs text-slate-400 mb-2">Total por Nível</div>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                innerRadius={40}
-                outerRadius={70}
+                innerRadius={55}
+                outerRadius={95}
                 paddingAngle={3}
                 dataKey="value"
                 label={({ name, value, cx, cy, midAngle, innerRadius, outerRadius }) => {
                   const RADIAN = Math.PI / 180;
-                  const radius = innerRadius + (outerRadius - innerRadius) * 0.8;
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  const r = outerRadius + 14;
+                  const x = cx + r * Math.cos(-midAngle * RADIAN);
+                  const y = cy + r * Math.sin(-midAngle * RADIAN);
                   return (
-                    <text x={x} y={y} fill="#e2e8f0" fontSize={11} textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
+                    <text x={x} y={y} fill="#e2e8f0" fontSize={13} textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
                       {`${name}: ${value}`}
                     </text>
                   );
                 }}
-                labelLine={false}
+                labelLine={true}
                 isAnimationActive={false}
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
+              {(() => {
+                const total = pieData.reduce((acc, d) => acc + d.value, 0);
+                return (
+                  <text x={"50%"} y={"50%"} fill="#e2e8f0" fontSize={13} textAnchor="middle" dominantBaseline="central">
+                    {`Total: ${total}`}
+                  </text>
+                );
+              })()}
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1e293b",

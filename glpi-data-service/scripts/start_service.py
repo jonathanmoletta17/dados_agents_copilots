@@ -18,10 +18,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+async def start_workers():
+    """Runs all workers concurrently."""
+    logger.info("🚀 Starting Workers (Sync)...")
+    await asyncio.gather(
+        RealtimeSyncWorker().run()
+    )
+
 def run_worker():
-    """Runs the RealtimeSyncWorker in an asyncio loop."""
-    logger.info("🚀 Starting RealtimeSyncWorker thread...")
-    asyncio.run(RealtimeSyncWorker().run())
+    """Runs the workers in an asyncio loop."""
+    asyncio.run(start_workers())
 
 def run_api():
     """Runs the FastAPI application using Uvicorn."""
@@ -36,7 +42,7 @@ def run_api():
 
 if __name__ == "__main__":
     print(f"🔌 DATABASE_URL: {config.DATABASE_URL}", flush=True)
-    logger.info("🔥 Starting GLPI Data Service (Worker + API)...")
+    logger.info("🔥 Starting GLPI Data Service (Workers + API)...")
     
     # Start Worker in a separate thread
     worker_thread = threading.Thread(target=run_worker, daemon=True)

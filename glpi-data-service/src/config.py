@@ -52,6 +52,11 @@ class Config:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     DISABLE_SYNC: bool = os.getenv("DISABLE_SYNC", "false").lower() == "true"
     
+    # AI Configuration
+    AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://host.docker.internal:11434/api/generate")
+    AI_MODEL_NAME: str = os.getenv("AI_MODEL_NAME", "llama3")
+    AI_CONFIDENCE_THRESHOLD: float = float(os.getenv("AI_CONFIDENCE_THRESHOLD", "0.85"))
+
     @classmethod
     def get_user_token(cls, context: str) -> str:
         """Retorna o user token para um contexto específico."""

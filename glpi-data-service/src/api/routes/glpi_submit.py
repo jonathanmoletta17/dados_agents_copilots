@@ -17,6 +17,7 @@ class FormSubmission(BaseModel):
     assunto: str = Field(...)
     descricao: str = Field(...)
     campoExtra: Optional[str] = None
+    username: Optional[str] = None  # Novo campo para identificar o usuário logado
 
 def map_urgency(label: Optional[str]) -> int:
     if not label:
@@ -50,7 +51,16 @@ def get_search_field_id(client: GLPIClient, itemtype: str, target_field: str) ->
                 return int(entry.get('id'))
     except Exception:
         pass
-    # Fallback comum para 'name'
+    
+    # Fallbacks robustos se searchOptions falhar
+    if target_field.lower() == 'name':
+        return 1
+    if target_field.lower() == 'realname':
+        return 9
+    if target_field.lower() == 'completename':
+        return 14 # ID comum para completename em ITILCategory
+        
+    # Fallback genérico
     return 2
 
 def resolve_category_id(client: GLPIClient, tipo_label: str) -> Optional[int]:
@@ -90,6 +100,14 @@ def resolve_category_id(client: GLPIClient, tipo_label: str) -> Optional[int]:
 def resolve_location_id(client: GLPIClient, loc_label: Optional[str]) -> Optional[int]:
     if not loc_label:
         return None
+    
+    # Limpeza defensiva: remover prefixo se ainda existir (ex: "Local (Root 70): ")
+    clean_label = loc_label
+    if ':' in clean_label:
+        parts = clean_label.split(':')
+        if len(parts) > 1:
+            clean_label = parts[1].strip()
+
     field_id = get_search_field_id(client, 'Location', 'name')
     try:
         data = client.make_request(
@@ -97,8 +115,9 @@ def resolve_location_id(client: GLPIClient, loc_label: Optional[str]) -> Optiona
             params={
                 "criteria[0][field]": field_id,
                 "criteria[0][searchtype]": "contains",
-                "criteria[0][value]": loc_label,
-                "range": "0-50"
+                "criteria[0][value]": clean_label,
+                "range": "0-50",
+                "forcedisplay[0]": 2 # Force ID return
             }
         )
         items = data.get('items') or data.get('data') or []
@@ -113,7 +132,7 @@ def resolve_location_id(client: GLPIClient, loc_label: Optional[str]) -> Optiona
         locs = client.make_request("Location", params={"range": "0-999"})
         for l in locs or []:
             nm = l.get('name') or ''
-            if loc_label.lower() in nm.lower():
+            if clean_label.lower() in nm.lower():
                 lid = l.get('id')
                 if lid:
                     return int(lid)
@@ -134,7 +153,8 @@ def resolve_user_id(client: GLPIClient, name_label: Optional[str]) -> Optional[i
                     "criteria[0][field]": field_id,
                     "criteria[0][searchtype]": "contains",
                     "criteria[0][value]": name_label,
-                    "range": "0-50"
+                    "range": "0-50",
+                    "forcedisplay[0]": 2 # Force ID return
                 }
             )
             items = data.get('items') or data.get('data') or []
@@ -160,19 +180,6 @@ def create_glpi_ticket(context: str, submission: FormSubmission) -> Dict:
 
     client = GLPIClient(base_url=base_url, app_token=app_token, user_token=user_token)
 
-    # Monta content com bloco de informações do formulário
-    content_lines = []
-    content_lines.append(submission.descricao.strip())
-    content_lines.append(f"Telefone: {submission.telefone}")
-    content_lines.append(f"Atendimento: {submission.atendimentoPara}")
-    if submission.nomePessoa:
-        content_lines.append(f"Nome pessoa: {submission.nomePessoa}")
-    if submission.localizacao:
-        content_lines.append(f"Localização: {submission.localizacao}")
-    if submission.campoExtra:
-        content_lines.append(f"Extra: {submission.campoExtra}")
-    content = "\n".join(content_lines)
-
     # Resolvers
     urgency_num = map_urgency(submission.urgencia)
     # Dicionário básico de categorias por serviço (fallback)
@@ -185,9 +192,41 @@ def create_glpi_ticket(context: str, submission: FormSubmission) -> Dict:
     }
     cat_id = resolve_category_id(client, submission.tipo)
     loc_id = resolve_location_id(client, submission.localizacao)
+    
     requester_id = None
+    # Lógica de Requerente
     if submission.atendimentoPara and submission.atendimentoPara.strip() == 'Para outra Pessoa':
         requester_id = resolve_user_id(client, submission.nomePessoa)
+    elif submission.atendimentoPara and submission.atendimentoPara.strip() == 'Para mim':
+        # Tenta resolver pelo username do usuário logado
+        if submission.username:
+            requester_id = resolve_user_id(client, submission.username)
+
+    # Monta content com bloco de informações do formulário
+    content_lines = []
+    content_lines.append(submission.descricao.strip())
+    content_lines.append("") # Linha em branco para separação
+    
+    if submission.telefone:
+        content_lines.append(f"Telefone: {submission.telefone}")
+        
+    content_lines.append(f"Atendimento: {submission.atendimentoPara}")
+    
+    if submission.nomePessoa:
+        content_lines.append(f"Nome pessoa: {submission.nomePessoa}")
+        
+    # Só adiciona localização na descrição se NÃO foi mapeada para campo nativo
+    # Ou se preferir manter redundância, pode deixar, mas sem prefixo
+    if submission.localizacao:
+        clean_loc = submission.localizacao
+        if ':' in clean_loc:
+             clean_loc = clean_loc.split(':')[1].strip()
+        content_lines.append(f"Localização (Texto): {clean_loc}")
+        
+    if submission.campoExtra:
+        content_lines.append(f"Extra: {submission.campoExtra}")
+        
+    content = "\n".join(content_lines)
 
     # Fallbacks (em homologação, permitir prosseguir mesmo sem IDs resolvidos)
     ticket_input = {

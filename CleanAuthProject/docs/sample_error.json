@@ -1,9 +1,0 @@
-{
-  "status": "unauthorized",
-  "message": "unauthorized",
-  "code": 401,
-  "session_token": null,
-  "login": "jonathan-moletta",
-  "user_id": 1234,
-  "email": "user@example.com"
-}

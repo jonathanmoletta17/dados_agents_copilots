@@ -116,6 +116,8 @@ class GLPIClient:
                     response = self.session.post(url, headers=headers, params=params, json=json_data)
                 elif method.upper() == 'PUT':
                     response = self.session.put(url, headers=headers, params=params, json=json_data)
+                elif method.upper() == 'DELETE':
+                    response = self.session.delete(url, headers=headers, params=params)
                 else:
                     raise ValueError(f"Método HTTP não suportado: {method}")
 
@@ -255,7 +257,7 @@ class GLPIClient:
             
         return pending_map
 
-    def get_tickets_incremental(self, last_sync: datetime, limit: int = 100) -> Iterator[List[Dict]]:
+    def get_tickets_incremental(self, last_sync: datetime, limit: int = 100, is_deleted: int = 0) -> Iterator[List[Dict]]:
         """Busca tickets modificados após a última sincronização e enriquece os dados."""
         
         # Ensure caches are loaded
@@ -268,7 +270,8 @@ class GLPIClient:
         params = {
             'range': f'0-{limit-1}',
             'sort': 'date_mod',
-            'order': 'DESC'
+            'order': 'DESC',
+            'is_deleted': is_deleted
         }
         
         offset = 0
