@@ -72,11 +72,11 @@ export function TechnicianRanking({ ranking }: TechnicianRankingProps) {
 
       <div className="grid grid-cols-12 gap-4 flex-1 min-h-0">
         {/* Top 3 - Featured */}
-        <div className="col-span-5 grid grid-cols-2 md:grid-cols-3 auto-rows-[minmax(90px,auto)] gap-1.5 h-full content-start">
+        <div className="col-span-5 grid grid-cols-2 md:grid-cols-3 auto-rows-[minmax(90px,auto)] gap-1.5 h-full">
           {top3.map((tech) => (
             <div
               key={tech.rank}
-              className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-all relative overflow-hidden group h-auto min-h-[90px]"
+              className="flex flex-col items-center justify-center gap-1.5 p-2 bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-all relative overflow-hidden group h-full min-h-[90px]"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 

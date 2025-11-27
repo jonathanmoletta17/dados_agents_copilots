@@ -76,7 +76,7 @@ export function RecentTicketsCompact({ tickets }: RecentTicketsCompactProps) {
   return (
     <div className="h-full bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/40 p-4 shadow-xl flex flex-col gap-4">
       {/* Recent Tickets */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-white flex items-center gap-2">
             <Ticket className="w-5 h-5 text-blue-400" />
@@ -99,7 +99,7 @@ export function RecentTicketsCompact({ tickets }: RecentTicketsCompactProps) {
           </div>
         </div>
 
-        <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+        <div className="space-y-3 flex-1 overflow-y-auto pr-1 min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-700/30 [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-slate-500">
           {filtered?.map((ticket) => (
             <TicketCard key={ticket.id} ticket={ticket} />
           ))}
